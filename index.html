@@ -240,9 +240,10 @@ function loop(){requestAnimationFrame(loop);
  if(G&&!G.over&&!G.paused)step()}
 loop();
 function step(){const st=AC.currentTime-G.T0-G.off;
+ if(MP&&MP.rx&&performance.now()-MP.rx>15000){fin('Your partner disconnected');$('etm').textContent='Your teammate disconnected.';$('again').style.display='none';return}
  if(MP){const sg=Math.floor(Math.max(0,st)/SEGL);if(st>-1&&sg!==G.sg){G.sg=sg;const me=actor(Math.max(st,0))===MP.me;G.bn.push({t:me?'YOUR TURN':"PARTNER'S TURN",st:Math.max(st,0),c:me?'#ffc83d':'#2ee6d6'})}}
  if(apt&&!MP){autoMove(st);if(aplay){const n=notes[G.n];if(n&&!n.done&&st>=n.t+((G.n*37%11)-5)*.006+(G.n%7==6?.09:0)){G.auto=1;hit(G.mx,G.my)}}}
- for(let i=G.n;i<notes.length&&notes[i].t<st-.18;i++){const n=notes[i];if(!n.done){if(!MP||own(n)){n.done=2;n.mt=st;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;thud();fxp('MISS',n,st,'#a58bbd');if(MP){let over=false;if(G.hp<=0)over=!koNow(st,Math.floor(n.t/SEGL));mpSend(n,'M');if(over)return fin('Out of energy')}}else if(st>n.t+.7){n.done=2;n.mt=st}}}
+ for(let i=G.n;i<notes.length&&notes[i].t<st-.18;i++){const n=notes[i];if(!n.done){if(!MP||own(n)){n.done=2;n.mt=st;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;thud();fxp('MISS',n,st,'#a58bbd');if(MP){let over=false;if(G.hp<=0)over=!koNow(st,Math.floor(n.t/SEGL));mpSend(n,'M');if(over)return fin('Out of energy')}}else if(st>n.t+.6){n.done=2;n.mt=st;n.wm=1;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;fxp('MISS',n,st,'#a58bbd');if(G.hp<=0&&!koNow(st,Math.floor(n.t/SEGL)))return fin('Out of energy')}}}
  while(notes[G.n]&&notes[G.n].done)G.n++;
  while(notes[G.bi+1]&&notes[G.bi+1].t<=st)G.bi++;
  if(G.hp<=0&&!MP)return fin('Out of energy');render(st)}
@@ -294,7 +295,7 @@ function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
  if(G.tr.length&&((st*30|0)%2))G.tr.shift();
  const m=16,done=G.p+G.g+G.m,acc=done?(G.p+.6*G.g)/done:1;
  if(apt){c.textAlign='left';c.fillStyle='#2ee6d6';c.font=`800 ${u*.26}px Outfit,sans-serif`;c.fillText(aplay?'AUTOPLAY':'AUTO POINT',m,m+u*1.3)}
- if(G.mp){const sg=Math.floor(Math.max(0,st)/SEGL),me=actor(Math.max(0,st))===MP.me,left=Math.max(0,Math.ceil((sg+1)*SEGL-st));c.textAlign='center';c.font=`800 ${Math.max(14,u*.34)}px Outfit,sans-serif`;c.fillStyle=me?'#ffc83d':'#2ee6d6';c.fillText(!me&&left<=3&&actor((sg+1)*SEGL+.01)===MP.me?"YOU'RE UP IN "+left:(me?'YOUR TURN':"PARTNER'S TURN")+' · '+left+'s',cx,tp-8)}
+ if(G.mp){const sg=Math.floor(Math.max(0,st)/SEGL),me=actor(Math.max(0,st))===MP.me,left=Math.max(0,Math.ceil((sg+1)*SEGL-st));c.textAlign='center';c.font=`800 ${Math.max(14,u*.34)}px Outfit,sans-serif`;c.fillStyle=me?'#ffc83d':'#2ee6d6';c.fillText(!me&&left<=3&&actor((sg+1)*SEGL+.01)===MP.me?"YOU'RE UP IN "+left:(me?'YOUR TURN':"PARTNER'S TURN")+' · '+left+'s',cx,tp-8);if(MP.rx&&performance.now()-MP.rx>3000){c.fillStyle='#ff4d6d';c.fillText('Partner not responding…',cx,tp+u*.3)}}
  c.textAlign='left';c.fillStyle='#f3ead8';c.font=`800 ${u*.55}px Outfit,sans-serif`;c.fillText(String(G.sc).padStart(7,'0'),m,m+u*.5);
  c.fillStyle='#a58bbd';c.font=`600 ${u*.28}px Outfit,sans-serif`;c.fillText(Math.round(acc*100)+'%',m,m+u*.9);
  const bw=Math.min(W*.3,u*4);bar(c,W-bw-m,m+4,bw,12,G.hp/100,G.hp<30?'#ff4d4d':'#2ee6d6');
@@ -338,7 +339,7 @@ function mkPeer(role){if(typeof RTCPeerConnection==='undefined')throw new Error(
  const pc=new RTCPeerConnection(ICE),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;
  pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed')mps('Could not connect directly. Try the same Wi-Fi or another network, then create a new room.')};return m}
 function wire(m,dc){m.dc=dc;dc.binaryType='arraybuffer';dc.onopen=()=>onOpen(m);dc.onclose=()=>{if(MP===m)onMsg({k:'leave'})};
- dc.onmessage=e=>{if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size)mps('Receiving the song… '+Math.min(99,Math.round(m.got/m.size*100))+'%')}}}
+ dc.onmessage=e=>{m.rx=performance.now();if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size)mps('Receiving the song… '+Math.min(99,Math.round(m.got/m.size*100))+'%')}}}
 // Room-code matchmaking: a tiny MQTT-over-WebSocket client passes the connection details through free public brokers.
 // Only the short handshake goes through them; the game itself runs directly between the two devices.
 const RC='ABCDEFGHJKMNPQRSTUVWXYZ23456789',BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
@@ -373,7 +374,7 @@ function syncClock(m){return new Promise(ok=>{let n=0,best=1e9;m.pg=(t0,th)=>{co
 async function streamSong(m){const ab=await SONGFILE.arrayBuffer(),dc=m.dc,N=16384;dc.bufferedAmountLowThreshold=1<<20;
  for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>4<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%40==0)mps('Sending the song… '+Math.round(o/ab.byteLength*100)+'%')}
  send({k:'songend'});mps('Song sent. Waiting for your friend to get ready…')}
-function onOpen(m){if(MP!==m)return;clearInterval(m.iv);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');
+function onOpen(m){if(MP!==m)return;clearInterval(m.iv);m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1000);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');
   send({k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size});streamSong(m)}else{mps('Connected! Waiting for the song…');m.sp=syncClock(m)}}
 const snap=()=>({q:G.q,sc:G.sc,cb:G.combo,bs:G.best,hp:G.hp,p:G.p,g:G.g,m:G.m,fv:G.fv,fe:G.fe});
 function mpSend(n,r){G.q++;send({k:'n',i:n.i,r,s:snap()})}
@@ -389,7 +390,7 @@ function onMsg(p){if(!MP)return;switch(p.k){
  case'start':if(MP.role!=='guest')break;MP.notes=p.notes.map(a=>({t:a[0],s:a[1],big:!!a[2],num:a[3],grp:a[4],done:0}));MP.startAt=p.at;go();break;
  case'n':{if(!G||G.over||!MP)break;const n=notes[p.i];if(!n)break;const st=AC.currentTime-G.T0-G.off;
   adopt(p.s);
-  if(n.done!==1){n.done=p.r==='M'?2:1;n.ht=n.mt=st;fxp(p.r==='P'?'PERFECT':p.r==='G'?'GOOD':'MISS',n,st,p.r==='M'?'#a58bbd':p.r==='P'?'#ffc83d':'#2ee6d6');
+  if(n.done!==1&&(!n.wm||p.r!=='M')){n.done=p.r==='M'?2:1;n.ht=n.mt=st;fxp(p.r==='P'?'PERFECT':p.r==='G'?'GOOD':'MISS',n,st,p.r==='M'?'#a58bbd':p.r==='P'?'#ffc83d':'#2ee6d6');
    if(p.r!=='M')for(let i=0;i<10;i++){const a=Math.random()*6.28,v=u*(1.5+Math.random()*3);G.pa.push({x:PX(n.nx),y:PY(n.ny),vx:Math.cos(a)*v,vy:Math.sin(a)*v,st,c:i%2?'#ffc83d':'#ff2e93'})}}
   break}
  case'c':if(G&&!G.over){const c=G.pc;c.tx=p.x;c.ty=p.y;c.t=performance.now();if(c.x===undefined){c.x=p.x;c.y=p.y}}break;
@@ -399,9 +400,9 @@ function onMsg(p){if(!MP)return;switch(p.k){
 function startHost(){if(!MP||!MP.ready)return;notes=build();MP.startAt=Date.now()+4500;MP.notes=null;
  send({k:'start',at:MP.startAt,notes:notes.map(n=>[+n.t.toFixed(3),+n.s.toFixed(2),n.big?1:0,n.num,n.grp])});go()}
 function modeVis(){document.querySelectorAll('.modes').forEach(e=>e.style.display=MP?'none':'')}
-function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();clearInterval(m.iv);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
+function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();clearInterval(m.iv);clearInterval(m.hb);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
 function mpLeave(){if(MP)send({k:'leave'});mpEnd()}
-$('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;
+$('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',()=>{if(MP)send({k:'leave'})});
 $('mpready').onclick=()=>{AC.resume();send({k:'ready'});$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
 $('mpback').onclick=()=>{const gs=MP&&MP.role==='guest';mpLeave();show(MPM==='host'&&!gs?'pick':'up')};
 $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
