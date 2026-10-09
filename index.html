@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>OSU Advanced</title>
+<meta name="author" content="Sayon">
 <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#14061f;--card:#24102f;--ink:#f3ead8;--mut:#a58bbd;--mag:#ff2e93;--cy:#2ee6d6;--gold:#ffc83d;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -55,6 +56,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 #rc{text-transform:uppercase;letter-spacing:6px;font-size:22px;text-align:center}#rcode{font:400 54px Monoton,Impact,sans-serif;color:var(--gold);letter-spacing:4px;min-height:60px}#mps{min-height:48px;color:var(--ink)}
 #mp textarea{width:100%;padding:10px 12px;border-radius:10px;border:2px solid #4a2a5c;background:var(--card);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:none;margin-bottom:8px;word-break:break-all}
 #mpP{margin:12px 0;padding:12px 14px;border:2px solid #4a2a5c;border-radius:12px;background:var(--card)}#mpP .pl{display:flex;justify-content:space-between;gap:10px;font-weight:600}#mpP .pl span{color:var(--mut);font-weight:400;text-align:right}#mpP .trk{height:10px;background:#14061f;border-radius:6px;overflow:hidden;margin-top:8px}#mpPb{height:100%;width:0;background:linear-gradient(90deg,var(--mag),var(--gold));transition:width .2s}
+#ver{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);text-align:center;font-size:12px;color:var(--mut);opacity:.75;pointer-events:none;z-index:1}#pz small{color:var(--mut)}
 </style></head><body>
 
 <section class="scr on" id="up">
@@ -88,14 +90,15 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 <section class="scr" id="mp">
  <h2 id="mpt">Co-op</h2>
  <p>Take turns: one of you plays 30 seconds, the other plays the next 30, and so on, with one shared score, combo and health bar. Works across phone and desktop. No auto assist, Auto point or Autoplay in co-op.</p>
- <div id="mpH" style="display:none"><div class="go"><button id="mpmk">Create room</button></div><div id="rcode"></div></div>
+ <div id="mpH" style="display:none"><div class="go"><button id="mpmk">Create room</button></div><div id="rcode"></div><div id="mpL" class="go" style="display:none"><button id="cpl" class="alt">Copy invite link</button><button id="shl" class="alt" style="display:none">Share link</button></div></div>
  <div id="mpG" style="display:none"><label for="rc">Room code</label><input id="rc" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="X7KQ2M"><div class="go"><button id="jn">Join room</button></div></div>
  <div id="mpP" style="display:none"><div class="pl"><b id="mpPn">Partner</b><span id="mpPs"></span></div><div class="trk"><div id="mpPb"></div></div></div>
  <p id="mps"></p>
  <div class="go"><button id="mpready" style="display:none">I'm ready</button><button id="mpgo" style="display:none">Start the match</button><button id="mpback" class="alt">Back</button></div>
 </section>
+<div id="ver"></div>
 <button id="pzb" aria-label="Pause">❚❚</button>
-<div id="pz"><h2>Paused</h2><div class="vols"></div><div class="modes"></div><button id="rz">Resume</button><button id="qt" class="alt">Back to menu</button></div>
+<div id="pz"><h2>Paused</h2><div class="vols"></div><div class="modes"></div><button id="rz">Resume</button><button id="qt" class="alt">Back to menu</button><small id="verp"></small></div>
 <canvas id="cv"></canvas>
 
 <section class="scr" id="end">
@@ -107,7 +110,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 
 <script>
 const $=i=>document.getElementById(i),cv=$('cv');
-const show=n=>{document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===n));cv.style.display=n==='game'?'block':'none';$('as2').style.display=n==='game'&&!MP?'block':'none';$('pzb').style.display=n==='game'?'block':'none'};
+const show=n=>{document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===n));cv.style.display=n==='game'?'block':'none';$('as2').style.display=n==='game'&&!MP?'block':'none';$('pzb').style.display=n==='game'?'block':'none';$('ver').style.display=n==='game'?'none':'block'};
 const B={beat:['Main beat','Steady pulse locked to the song tempo. Easiest.'],kick:['Kick & bass','Every low thump found in the spectrum'],snare:['Snare & clap','Backbeat snaps from the mids'],hat:['Hi-hats','Fast, shimmery top end. Busy.'],all:['Full mix','Every onset across the spectrum']};
 let AC,buf,bands={},sel='beat',diff=.45,notes=[],pv=null,G=null,W,H,cx,gy,u,Z,dpr=1;
 const LEAD=1.5,tick=()=>new Promise(r=>setTimeout(r,0));
@@ -340,7 +343,7 @@ const send=p=>{if(MP&&MP.dc&&MP.dc.readyState==='open')MP.dc.send(JSON.stringify
 const guard=f=>async()=>{try{await f()}catch(e){mps(e.message||String(e))}};
 function mpShow(m){if(MP)mpLeave();G=null;MPM=m;if(apt)setApt(false);show('mp');$('mpt').textContent=m==='host'?'Host a co-op match':'Join a co-op match';
  $('mpH').style.display=m==='host'?'':'none';$('mpG').style.display=m==='join'?'':'none';$('mpmk').style.display='';$('rcode').textContent='';$('rc').value='';
- $('mpready').style.display=$('mpgo').style.display='none';$('mpP').style.display='none';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
+ $('mpready').style.display=$('mpgo').style.display='none';$('mpL').style.display='none';$('mpP').style.display='none';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
 function mkPeer(role){if(typeof RTCPeerConnection==='undefined')throw new Error('This browser does not support direct connections.');AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
  const pc=new RTCPeerConnection(ICE),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;
  pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed')mps('Could not connect directly. Try the same Wi-Fi or another network, then create a new room.')};return m}
@@ -369,7 +372,7 @@ async function createRoom(){if(!SONGFILE)throw new Error('Pick a song first.');c
  await m.pc.setLocalDescription(await m.pc.createOffer());await gathered(m.pc);const offer=JSON.stringify({t:'offer',n,d:await pack(m.pc.localDescription)});
  await signal(code,'host',m,async x=>{if(x.t!=='answer'||x.n!==n||m.answered||MP!==m)return;m.answered=1;try{await m.pc.setRemoteDescription(await unpack(x.d));mps('Friend found! Connecting…')}catch(e){m.answered=0}});
  m.sig.pub(offer);m.iv=setInterval(()=>{if(m.answered||MP!==m){clearInterval(m.iv);return}m.sig.pub(offer)},2500);
- $('rcode').textContent=code;$('mpmk').style.display='none';mps('Give this code to your friend. Waiting for them to join…')}
+ $('rcode').textContent=code;$('mpmk').style.display='none';m.link=inviteLink(code);$('mpL').style.display='';if(navigator.share)$('shl').style.display='';mps(LOC.protocol==='file:'?'Give this code to your friend. (Invite links only work once the game is on a website.) Waiting for them to join…':'Share the code or the invite link with your friend. Waiting for them to join…')}
 async function joinRoom(){const code=$('rc').value.trim().toUpperCase();if(code.length!==6)throw new Error('Enter the 6-character room code.');const m=mkPeer('guest');m.pc.ondatachannel=e=>wire(m,e.channel);mps('Looking for the room…');
  await signal(code,'guest',m,async x=>{if(x.t!=='offer'||m.got||MP!==m)return;m.got=1;
   try{await m.pc.setRemoteDescription(await unpack(x.d));await m.pc.setLocalDescription(await m.pc.createAnswer());await gathered(m.pc);
@@ -418,5 +421,14 @@ $('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk'
 $('mpready').onclick=()=>{AC.resume();send({k:'ready'});setMy('ready');$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
 $('mpback').onclick=()=>{const gs=MP&&MP.role==='guest';mpLeave();show(MPM==='host'&&!gs?'pick':'up')};
 $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
+// ===== version, invite links =====
+const VERSION='2.3',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+$('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
+const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}
+$('cpl').onclick=async()=>{if(!MP||!MP.link)return;mps(await copyText(MP.link)?'Invite link copied! Send it to your friend.':'Could not copy. The link is: '+MP.link)};
+$('shl').onclick=()=>{if(MP&&MP.link&&navigator.share)navigator.share({title:'OSU Advanced co-op',text:'Join my co-op match!',url:MP.link}).catch(()=>{})};
+(function(){const m=((LOC.hash||'')+'&'+(LOC.search||'')).match(/join=([A-Za-z0-9]{6})/);if(!m)return;const code=m[1].toUpperCase();try{history.replaceState(null,'',LOC.pathname||'')}catch(e){}
+ setTimeout(()=>{mpShow('join');$('rc').value=code;mps('You were invited to room '+code+'. Joining…');guard(joinRoom)()},300)})();
 </script>
 </body></html>
