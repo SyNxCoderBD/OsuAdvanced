@@ -93,7 +93,8 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <div id="mpH" style="display:none"><div class="go"><button id="mpmk">Create room</button></div><div id="rcode"></div><div id="mpL" class="go" style="display:none"><button id="cpl" class="alt">Copy invite link</button><button id="shl" class="alt" style="display:none">Share link</button></div></div>
  <div id="mpG" style="display:none"><label for="rc">Room code</label><input id="rc" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="X7KQ2M"><div class="go"><button id="jn">Join room</button></div></div>
  <div id="mpP" style="display:none"><div class="pl"><b id="mpPn">Partner</b><span id="mpPs"></span></div><div class="trk"><div id="mpPb"></div></div></div>
- <p id="mps"></p>
+ <p id="mps"></p><small id="mpRt" style="display:block;color:var(--mut);margin-bottom:8px"></small>
+ <details id="mpAdv" style="margin:6px 0 10px;color:var(--mut)"><summary style="cursor:pointer">Connection helper (only if you cannot connect)</summary><p style="font-size:13px;margin:8px 0">The game already tries free public relay servers. If your friend is still far away and it fails, add your own relay (a TURN server from a provider such as Metered, Twilio or Cloudflare). Only one of you needs to add it.</p><label for="tu">Relay address (turn:… or turns:…)</label><input id="tu" autocomplete="off" placeholder="turn:relay.example.com:443"><label for="tn">Username</label><input id="tn" autocomplete="off"><label for="tc">Password</label><input id="tc" type="password" autocomplete="off"></details>
  <div class="go"><button id="mpready" style="display:none">I'm ready</button><button id="mpgo" style="display:none">Start the match</button><button id="mpback" class="alt">Back</button></div>
 </section>
 <div id="ver"></div>
@@ -332,21 +333,23 @@ document.querySelectorAll('.modes').forEach(e=>{e.innerHTML='<button class="alt 
 document.addEventListener('click',e=>{const t=e.target;if(t.classList.contains('mt')){setApt(!apt);t.blur()}else if(t.classList.contains('mp')){setAplay(!aplay);t.blur()}});
 
 // ===== Co-op: direct peer-to-peer (WebRTC). No server, no accounts, no keys. =====
-const mps=t=>$('mps').textContent=t,ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+const mps=t=>$('mps').textContent=t,ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}]};
+function customTurn(){try{const v=JSON.parse(localStorage.getItem('dc:turn'));return v&&v.u?v:null}catch(e){return null}}
+function iceCfg(){const c={iceServers:ICE.iceServers.slice()};if(ICE.iceTransportPolicy)c.iceTransportPolicy=ICE.iceTransportPolicy;const t=customTurn();if(t)c.iceServers.push({urls:t.u,username:t.n||undefined,credential:t.c||undefined});return c}
 const b64u=u=>{let t='';for(let i=0;i<u.length;i++)t+=String.fromCharCode(u[i]);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
 const unb64=t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const r=atob(t),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u};
 const pipe=async(u,S)=>new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new S('deflate-raw'))).arrayBuffer());
 async function pack(d){const u=new TextEncoder().encode(JSON.stringify({t:d.type,s:d.sdp}));return typeof CompressionStream!=='undefined'?'z'+b64u(await pipe(u,CompressionStream)):'r'+b64u(u)}
 async function unpack(c){try{c=c.replace(/\s+/g,'');const u=unb64(c.slice(1)),o=JSON.parse(new TextDecoder().decode(c[0]==='z'?await pipe(u,DecompressionStream):u));return{type:o.t,sdp:o.s}}catch(e){throw new Error('That code looks incomplete. Copy the whole code and try again.')}}
-const gathered=pc=>new Promise(ok=>{if(pc.iceGatheringState==='complete')return ok();const t=setTimeout(ok,6000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);ok()}})});
+const gathered=pc=>new Promise(ok=>{if(pc.iceGatheringState==='complete')return ok();const t=setTimeout(ok,9000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);ok()}})});
 const send=p=>{if(MP&&MP.dc&&MP.dc.readyState==='open')MP.dc.send(JSON.stringify(p))};
 const guard=f=>async()=>{try{await f()}catch(e){mps(e.message||String(e))}};
 function mpShow(m){if(MP)mpLeave();G=null;MPM=m;if(apt)setApt(false);show('mp');$('mpt').textContent=m==='host'?'Host a co-op match':'Join a co-op match';
  $('mpH').style.display=m==='host'?'':'none';$('mpG').style.display=m==='join'?'':'none';$('mpmk').style.display='';$('rcode').textContent='';$('rc').value='';
- $('mpready').style.display=$('mpgo').style.display='none';$('mpL').style.display='none';$('mpP').style.display='none';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
+ $('mpready').style.display=$('mpgo').style.display='none';$('mpL').style.display='none';$('mpP').style.display='none';$('mpRt').textContent='';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
 function mkPeer(role){if(typeof RTCPeerConnection==='undefined')throw new Error('This browser does not support direct connections.');AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
- const pc=new RTCPeerConnection(ICE),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;
- pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed')mps('Could not connect directly. Try the same Wi-Fi or another network, then create a new room.')};return m}
+ const pc=new RTCPeerConnection(iceCfg()),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;
+ pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed')mps('Could not connect, even through the relay servers. Your network may block it. Try again, switch between Wi-Fi and mobile data, or add your own relay under "Connection helper" (both players can try).')};return m}
 function wire(m,dc){m.dc=dc;dc.binaryType='arraybuffer';dc.onopen=()=>onOpen(m);dc.onclose=()=>{if(MP===m)onMsg({k:'leave'})};
  dc.onmessage=e=>{m.rx=performance.now();if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size){const pc=Math.min(99,Math.round(m.got/m.size*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}}}}}
 // Room-code matchmaking: a tiny MQTT-over-WebSocket client passes the connection details through free public brokers.
@@ -383,7 +386,10 @@ function syncClock(m){return new Promise(ok=>{let n=0,best=1e9;m.pg=(t0,th)=>{co
 async function streamSong(m){const ab=await SONGFILE.arrayBuffer(),dc=m.dc,N=16384;dc.bufferedAmountLowThreshold=1<<20;
  for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>4<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%10==0){const pc=Math.round(o/ab.byteLength*100);mps('Sending the song… '+pc+'%');setMy('sending',pc)}}
  send({k:'songend'});setMy('waiting');mps('Song sent. Waiting for your friend to get ready…')}
-function onOpen(m){if(MP!==m)return;clearInterval(m.iv);m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1000);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');setMy('connected');
+async function routeInfo(m){try{const st=await m.pc.getStats();let pair=null;st.forEach(r=>{if(r.type==='transport'&&r.selectedCandidatePairId)pair=st.get(r.selectedCandidatePairId)});if(!pair)st.forEach(r=>{if(r.type==='candidate-pair'&&r.nominated&&r.state==='succeeded')pair=r});if(!pair)return;
+ const l=st.get(pair.localCandidateId),r=st.get(pair.remoteCandidateId);if(!(l&&l.candidateType)&&!(r&&r.candidateType))return;const rel=(l&&l.candidateType==='relay')||(r&&r.candidateType==='relay');m.route=rel?'relay':'direct';
+ $('mpRt').textContent=rel?'Connection: through a relay server (slightly slower, works on strict networks)':'Connection: direct (fastest)'}catch(e){}}
+function onOpen(m){if(MP!==m)return;setTimeout(()=>routeInfo(m),600);clearInterval(m.iv);m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1000);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');setMy('connected');
   send({k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size});streamSong(m)}else{mps('Connected! Waiting for the song…');setMy('syncing');m.sp=syncClock(m)}}
 const snap=()=>({q:G.q,sc:G.sc,cb:G.combo,bs:G.best,hp:G.hp,p:G.p,g:G.g,m:G.m,fv:G.fv,fe:G.fe});
 function mpSend(n,r){G.q++;send({k:'n',i:n.i,r,s:snap()})}
@@ -421,6 +427,7 @@ $('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk'
 $('mpready').onclick=()=>{AC.resume();send({k:'ready'});setMy('ready');$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
 $('mpback').onclick=()=>{const gs=MP&&MP.role==='guest';mpLeave();show(MPM==='host'&&!gs?'pick':'up')};
 $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
+['tu','tn','tc'].forEach(id=>{const t=customTurn();if(t)$(id).value=t[{tu:'u',tn:'n',tc:'c'}[id]]||'';$(id).oninput=()=>{try{localStorage.setItem('dc:turn',JSON.stringify({u:$('tu').value.trim(),n:$('tn').value.trim(),c:$('tc').value}))}catch(e){}}});
 // ===== version, invite links =====
 const VERSION='2.3',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
