@@ -54,6 +54,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 #mp input{width:100%;padding:11px 14px;border-radius:10px;border:2px solid #4a2a5c;background:var(--card);color:var(--ink);font:inherit}#mp label{display:block;margin:10px 0 4px;color:var(--mut);font-size:14px}
 #rc{text-transform:uppercase;letter-spacing:6px;font-size:22px;text-align:center}#rcode{font:400 54px Monoton,Impact,sans-serif;color:var(--gold);letter-spacing:4px;min-height:60px}#mps{min-height:48px;color:var(--ink)}
 #mp textarea{width:100%;padding:10px 12px;border-radius:10px;border:2px solid #4a2a5c;background:var(--card);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:none;margin-bottom:8px;word-break:break-all}
+#mpP{margin:12px 0;padding:12px 14px;border:2px solid #4a2a5c;border-radius:12px;background:var(--card)}#mpP .pl{display:flex;justify-content:space-between;gap:10px;font-weight:600}#mpP .pl span{color:var(--mut);font-weight:400;text-align:right}#mpP .trk{height:10px;background:#14061f;border-radius:6px;overflow:hidden;margin-top:8px}#mpPb{height:100%;width:0;background:linear-gradient(90deg,var(--mag),var(--gold));transition:width .2s}
 </style></head><body>
 
 <section class="scr on" id="up">
@@ -89,6 +90,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <p>Take turns: one of you plays 30 seconds, the other plays the next 30, and so on, with one shared score, combo and health bar. Works across phone and desktop. No auto assist, Auto point or Autoplay in co-op.</p>
  <div id="mpH" style="display:none"><div class="go"><button id="mpmk">Create room</button></div><div id="rcode"></div></div>
  <div id="mpG" style="display:none"><label for="rc">Room code</label><input id="rc" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="X7KQ2M"><div class="go"><button id="jn">Join room</button></div></div>
+ <div id="mpP" style="display:none"><div class="pl"><b id="mpPn">Partner</b><span id="mpPs"></span></div><div class="trk"><div id="mpPb"></div></div></div>
  <p id="mps"></p>
  <div class="go"><button id="mpready" style="display:none">I'm ready</button><button id="mpgo" style="display:none">Start the match</button><button id="mpback" class="alt">Back</button></div>
 </section>
@@ -99,7 +101,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 <section class="scr" id="end">
  <h2 id="et">Track complete</h2>
  <p class="rank" id="rk">A</p>
- <div class="stats" id="st"></div><p id="etm"></p>
+ <div class="stats" id="st"></div><p id="etm"></p><p id="etp"></p>
  <div class="go"><button id="again">Play again</button><button id="chg" class="alt">Change beats</button><button id="nw" class="alt">New song</button></div>
 </section>
 
@@ -204,13 +206,13 @@ function place(){let r=((SEED||7)^(sel.charCodeAt(0)*7919)^Math.round(diff*1000)
 function go(){stopPv();notes=MP&&MP.notes?MP.notes:build();notes.forEach((n,i)=>n.i=i);if(notes.length<4){show('pick');$('warn').textContent='Too few beats in this layer. Pick another or raise the crowd level.';return}
  AC.resume();$('pz').classList.remove('on');const s=AC.createBufferSource();s.buffer=buf;const mg=AC.createGain();mg.gain.value=VM;s.connect(mg);mg.connect(AC.destination);const T0=MP?AC.currentTime+Math.max(.5,(MP.startAt-MP.off-Date.now())/1000):AC.currentTime+3;s.start(T0);
  G={mp:MP?1:0,q:0,sg:-1,kos:[],pc:{},s,mg,T0,sc:0,combo:0,best:0,hp:100,p:0,g:0,m:0,fx:[],pa:[],tr:[],over:0,paused:0,fv:0,fe:-9,bn:[],ct:-9,bi:-1,n:0,mx:innerWidth/2,my:innerHeight/2,ms:0,off:+$('lat').value/1000};
- s.onended=()=>{if(G&&G.s===s&&!G.over)fin('Track complete')};show('game');rs();if(notes[0].nx===undefined)place();modeVis()}
+ s.onended=()=>{if(G&&G.s===s&&!G.over)fin('Track complete')};show('game');rs();if(notes[0].nx===undefined)place();modeVis();if(MP)setMy('playing')}
 function fin(t){if(G.over)return;G.over=1;try{G.s.stop()}catch(e){}if(MP)send({k:'end'});if(G.mp)t='Co-op · '+t;
  const tot=notes.length,acc=(G.p+.6*G.g)/tot,died=G.hp<=0,rk=died?'F':acc>=.95?'S':acc>=.85?'A':acc>=.7?'B':acc>=.5?'C':'D',key='dc:'+fname+sel+diff;let pb=0;
  try{pb=+localStorage.getItem(key)||0;if(G.auto)t+=' · Autoplay';else if(!died&&!G.mp&&G.sc>pb){localStorage.setItem(key,G.sc);t+=pb?' · New best!':''}}catch(e){}
  $('et').textContent=t;$('rk').textContent=rk;
  $('st').innerHTML=[['Score',G.sc.toLocaleString()],['Best combo',G.best],['Perfect',G.p],['Good',G.g],['Missed',G.m],['Accuracy',Math.round(acc*100)+'%']].map(a=>`<div>${a[0]}<b>${a[1]}</b></div>`).join('');
- $('pz').classList.remove('on');const co=!!MP,gs=co&&MP.role==='guest';$('again').style.display=gs?'none':'';$('chg').style.display=co?'none':'';$('nw').textContent=co?'Leave co-op':'New song';$('etm').textContent=co?(gs?'Waiting for the host to play again…':'Press Play again to restart with your teammate.'):'';show('end')}
+ $('pz').classList.remove('on');const co=!!MP,gs=co&&MP.role==='guest';if(co)setMy('results');$('again').style.display=gs?'none':'';$('chg').style.display=co?'none':'';$('nw').textContent=co?'Leave co-op':'New song';$('etm').textContent=co?(gs?'Waiting for the host to play again…':'Press Play again to restart with your teammate.'):'';show('end')}
 function rs(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx=W/2;u=Math.min(W/13,H/8);tp=Math.max(76,u*.72+44);const bm=Math.max(20,u*.5),mx=Math.max(8,u*.15),Hf=H-tp-bm;S=Math.min((W-2*mx)/VW,Hf/VH);ox=(W-VW*S)/2;oy=tp+(Hf-VH*S)/2;CR=RV*S}
 addEventListener('resize',()=>G&&!G.over&&rs());
 function pause(on){if(!G||G.over)return;if(MP){$('pz').classList.toggle('on',on);return}G.paused=on;$('pz').classList.toggle('on',on);on?AC.suspend():AC.resume()}
@@ -299,7 +301,7 @@ function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
  if(G.tr.length&&((st*30|0)%2))G.tr.shift();
  const m=16,done=G.p+G.g+G.m,acc=done?(G.p+.6*G.g)/done:1;
  if(apt){c.textAlign='left';c.fillStyle='#2ee6d6';c.font=`800 ${u*.26}px Outfit,sans-serif`;c.fillText(aplay?'AUTOPLAY':'AUTO POINT',m,m+u*1.3)}
- if(G.mp){const sg=Math.floor(Math.max(0,st)/SEGL),me=actor(Math.max(0,st))===MP.me,left=Math.max(0,Math.ceil((sg+1)*SEGL-st));c.textAlign='center';c.font=`800 ${Math.max(14,u*.34)}px Outfit,sans-serif`;c.fillStyle=me?'#ffc83d':'#2ee6d6';c.fillText(!me&&left<=3&&actor((sg+1)*SEGL+.01)===MP.me?"YOU'RE UP IN "+left:(me?'YOUR TURN':"PARTNER'S TURN")+' · '+left+'s',cx,tp-8);if(MP.rx&&performance.now()-MP.rx>3000){c.fillStyle='#ff4d6d';c.fillText('Partner not responding…',cx,tp+u*.3)}}
+ if(G.mp){const sg=Math.floor(Math.max(0,st)/SEGL),me=actor(Math.max(0,st))===MP.me,left=Math.max(0,Math.ceil((sg+1)*SEGL-st));c.textAlign='center';c.font=`800 ${Math.max(14,u*.34)}px Outfit,sans-serif`;c.fillStyle=me?'#ffc83d':'#2ee6d6';c.fillText(!me&&left<=3&&actor((sg+1)*SEGL+.01)===MP.me?"YOU'RE UP IN "+left:(me?'YOUR TURN':"PARTNER'S TURN")+' · '+left+'s',cx,tp-8);if(MP.rx&&performance.now()-MP.rx>3000){c.fillStyle='#ff4d6d';c.fillText('Partner not responding…',cx,tp+u*.3)}else if(MP.ps&&MP.ps.s==='away'){c.fillStyle='#ffb347';c.fillText('Partner switched to another app',cx,tp+u*.3)}}
  c.textAlign='left';c.fillStyle='#f3ead8';c.font=`800 ${u*.55}px Outfit,sans-serif`;c.fillText(String(G.sc).padStart(7,'0'),m,m+u*.5);
  c.fillStyle='#a58bbd';c.font=`600 ${u*.28}px Outfit,sans-serif`;c.fillText(Math.round(acc*100)+'%',m,m+u*.9);
  const bw=Math.min(W*.3,u*4);bar(c,W-bw-m,m+4,bw,12,G.hp/100,G.hp<30?'#ff4d4d':'#2ee6d6');
@@ -338,12 +340,12 @@ const send=p=>{if(MP&&MP.dc&&MP.dc.readyState==='open')MP.dc.send(JSON.stringify
 const guard=f=>async()=>{try{await f()}catch(e){mps(e.message||String(e))}};
 function mpShow(m){if(MP)mpLeave();G=null;MPM=m;if(apt)setApt(false);show('mp');$('mpt').textContent=m==='host'?'Host a co-op match':'Join a co-op match';
  $('mpH').style.display=m==='host'?'':'none';$('mpG').style.display=m==='join'?'':'none';$('mpmk').style.display='';$('rcode').textContent='';$('rc').value='';
- $('mpready').style.display=$('mpgo').style.display='none';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
+ $('mpready').style.display=$('mpgo').style.display='none';$('mpP').style.display='none';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
 function mkPeer(role){if(typeof RTCPeerConnection==='undefined')throw new Error('This browser does not support direct connections.');AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
  const pc=new RTCPeerConnection(ICE),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;
  pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed')mps('Could not connect directly. Try the same Wi-Fi or another network, then create a new room.')};return m}
 function wire(m,dc){m.dc=dc;dc.binaryType='arraybuffer';dc.onopen=()=>onOpen(m);dc.onclose=()=>{if(MP===m)onMsg({k:'leave'})};
- dc.onmessage=e=>{m.rx=performance.now();if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size)mps('Receiving the song… '+Math.min(99,Math.round(m.got/m.size*100))+'%')}}}
+ dc.onmessage=e=>{m.rx=performance.now();if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size){const pc=Math.min(99,Math.round(m.got/m.size*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}}}}}
 // Room-code matchmaking: a tiny MQTT-over-WebSocket client passes the connection details through free public brokers.
 // Only the short handshake goes through them; the game itself runs directly between the two devices.
 const RC='ABCDEFGHJKMNPQRSTUVWXYZ23456789',BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
@@ -376,18 +378,24 @@ async function joinRoom(){const code=$('rc').value.trim().toUpperCase();if(code.
  setTimeout(()=>{if(MP===m&&!m.got)mps('No room answered. Check the code, and make sure your friend has created the room.')},12000)}
 function syncClock(m){return new Promise(ok=>{let n=0,best=1e9;m.pg=(t0,th)=>{const t1=Date.now(),rtt=t1-t0;if(rtt<best){best=rtt;m.off=th+rtt/2-t1}if(++n>=8)ok();else send({k:'ping',t:Date.now()})};send({k:'ping',t:Date.now()});setTimeout(ok,5000)})}
 async function streamSong(m){const ab=await SONGFILE.arrayBuffer(),dc=m.dc,N=16384;dc.bufferedAmountLowThreshold=1<<20;
- for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>4<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%40==0)mps('Sending the song… '+Math.round(o/ab.byteLength*100)+'%')}
- send({k:'songend'});mps('Song sent. Waiting for your friend to get ready…')}
-function onOpen(m){if(MP!==m)return;clearInterval(m.iv);m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1000);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');
-  send({k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size});streamSong(m)}else{mps('Connected! Waiting for the song…');m.sp=syncClock(m)}}
+ for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>4<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%10==0){const pc=Math.round(o/ab.byteLength*100);mps('Sending the song… '+pc+'%');setMy('sending',pc)}}
+ send({k:'songend'});setMy('waiting');mps('Song sent. Waiting for your friend to get ready…')}
+function onOpen(m){if(MP!==m)return;clearInterval(m.iv);m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1000);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');setMy('connected');
+  send({k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size});streamSong(m)}else{mps('Connected! Waiting for the song…');setMy('syncing');m.sp=syncClock(m)}}
 const snap=()=>({q:G.q,sc:G.sc,cb:G.combo,bs:G.best,hp:G.hp,p:G.p,g:G.g,m:G.m,fv:G.fv,fe:G.fe});
 function mpSend(n,r){G.q++;send({k:'n',i:n.i,r,s:snap()})}
 function adopt(s){if(s.q>G.q){G.q=s.q;G.sc=s.sc;G.combo=s.cb;G.best=s.bs;G.hp=s.hp;G.p=s.p;G.g=s.g;G.m=s.m;G.fv=s.fv;G.fe=s.fe}}
 function koNow(st,sg){if(G.kos.some(k=>k.sg===sg))return false;const t=st+.6,sw=(sg+1)*SEGL-t>=2;G.kos.push({sg,t,sw});G.hp=50;G.fv=0;G.fe=-9;G.q++;send({k:'ko',sg,t,sw,s:snap()});G.bn.push({t:sw?'ENERGY OUT · SWITCH!':'ENERGY RESTORED',st,c:sw?'#ff4d6d':'#2ee6d6'});return true}
 function curSend(x,y,f){if(!MP||!G||G.over||!S)return;const t=performance.now();if(!f&&t-(G.lc||0)<50)return;G.lc=t;send({k:'c',x:+((x-ox)/(VW*S)).toFixed(4),y:+((y-oy)/(VH*S)).toFixed(4)})}
+const STX={connected:'Connected',syncing:'Syncing clocks…',sending:'Sending the song',receiving:'Downloading the song',decoding:'Preparing the audio…',loaded:'Song loaded, getting ready…',waiting:'Waiting for you to get ready',ready:'Ready ✓',playing:'Playing',results:'On the results screen',away:'Switched to another app or tab',left:'Left the match'};
+function setMy(s,p){const m=MP;if(!m||!m.dc)return;const k=s+'|'+(p==null?'':p);if(m.sentK===k)return;m.sentK=k;m.cur={s,p};send({k:'st',s,p:p==null?null:p})}
+function renderPS(){const m=MP;if(!m||!m.ps)return;const who=m.role==='host'?'Your friend':'The host',s=m.ps.s,p=m.ps.p,t=(STX[s]||s)+(p!=null&&(s==='sending'||s==='receiving')?' '+p+'%':'');
+ $('mpP').style.display='';$('mpPn').textContent=who;$('mpPs').textContent=t;$('mpPb').style.width=(p!=null?p:['loaded','waiting','ready','playing','results'].indexOf(s)>=0?100:s==='away'||s==='left'?0:8)+'%';$('etp').textContent=(m.role==='host'?'Your teammate':'The host')+': '+t}
+document.addEventListener('visibilitychange',()=>{const m=MP;if(!m||!m.dc||m.dc.readyState!=='open')return;if(document.hidden){m.back=m.cur;send({k:'st',s:'away',p:null});m.sentK='away|'}else{m.sentK='';if(m.back)setMy(m.back.s,m.back.p)}});
 function onMsg(p){if(!MP)return;switch(p.k){
- case'room':if(MP.role!=='guest')break;MP.size=p.size;MP.chunks=[];MP.got=0;fname=p.fname;TEMPO=p.tempo;SEED=p.seed;sel=p.sel;diff=p.diff;break;
- case'songend':if(MP.role!=='guest')break;guard(async()=>{mps('Preparing the song…');await MP.sp;buf=await AC.decodeAudioData(await new Blob(MP.chunks).arrayBuffer());MP.chunks=[];$('mpready').style.display='';mps('Song loaded. Tap "I\'m ready".')})();break;
+ case'st':MP.ps={s:p.s,p:p.p};renderPS();break;
+ case'room':if(MP.role!=='guest')break;MP.size=p.size;MP.chunks=[];MP.got=0;fname=p.fname;TEMPO=p.tempo;SEED=p.seed;sel=p.sel;diff=p.diff;setMy('receiving',0);break;
+ case'songend':if(MP.role!=='guest')break;guard(async()=>{mps('Preparing the song…');setMy('decoding');await MP.sp;buf=await AC.decodeAudioData(await new Blob(MP.chunks).arrayBuffer());MP.chunks=[];$('mpready').style.display='';setMy('loaded');mps('Song loaded. Tap "I\'m ready".')})();break;
  case'ping':if(MP.role==='host')send({k:'pong',t:p.t,th:Date.now()});break;
  case'pong':if(MP.pg)MP.pg(p.t,p.th);break;
  case'ready':if(MP.role==='host'){MP.ready=1;$('mpgo').style.display='';mps('Your friend is ready. Start when you are.')}break;
@@ -400,14 +408,14 @@ function onMsg(p){if(!MP)return;switch(p.k){
  case'c':if(G&&!G.over){const c=G.pc;c.tx=p.x;c.ty=p.y;c.t=performance.now();if(c.x===undefined){c.x=p.x;c.y=p.y}}break;
  case'ko':if(!G||G.over)break;if(!G.kos.some(k=>k.sg===p.sg))G.kos.push({sg:p.sg,t:p.t,sw:p.sw});adopt(p.s);G.fv=0;G.fe=-9;if(p.sw){G.bn.push({t:'TAKE OVER!',st:AC.currentTime-G.T0-G.off,c:'#ff4d6d'});G.rp=AC.currentTime-G.T0-G.off}break;
  case'end':if(G&&!G.over)fin('Match over');break;
- case'leave':if(G&&!G.over)fin('Your partner left');if(G&&G.over){$('etm').textContent='Your teammate left the room.';$('again').style.display='none'}else if(MP.role==='host'){mps('Your friend disconnected. Make a new invite code to try again.');$('mpgo').style.display='none'}else mps('The host disconnected.');break}}
+ case'leave':MP.ps={s:'left',p:null};renderPS();if(G&&!G.over)fin('Your partner left');if(G&&G.over){$('etm').textContent='Your teammate left the room.';$('again').style.display='none'}else if(MP.role==='host'){mps('Your friend disconnected. Make a new invite code to try again.');$('mpgo').style.display='none'}else mps('The host disconnected.');break}}
 function startHost(){if(!MP||!MP.ready)return;notes=build();place();MP.startAt=Date.now()+4500;MP.notes=notes;
  send({k:'start',at:MP.startAt,notes:notes.map(n=>[+n.t.toFixed(3),+n.s.toFixed(2),n.big?1:0,n.num,n.grp,n.nx,n.ny])});go()}
 function modeVis(){document.querySelectorAll('.modes').forEach(e=>e.style.display=MP?'none':'')}
 function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();clearInterval(m.iv);clearInterval(m.hb);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
 function mpLeave(){if(MP)send({k:'leave'});mpEnd()}
 $('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',()=>{if(MP)send({k:'leave'})});
-$('mpready').onclick=()=>{AC.resume();send({k:'ready'});$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
+$('mpready').onclick=()=>{AC.resume();send({k:'ready'});setMy('ready');$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
 $('mpback').onclick=()=>{const gs=MP&&MP.role==='guest';mpLeave();show(MPM==='host'&&!gs?'pick':'up')};
 $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
 </script>
