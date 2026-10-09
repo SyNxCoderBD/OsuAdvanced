@@ -94,7 +94,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <div id="mpG" style="display:none"><label for="rc">Room code</label><input id="rc" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="X7KQ2M"><div class="go"><button id="jn">Join room</button></div></div>
  <div id="mpP" style="display:none"><div class="pl"><b id="mpPn">Partner</b><span id="mpPs"></span></div><div class="trk"><div id="mpPb"></div></div></div>
  <p id="mps"></p><small id="mpRt" style="display:block;color:var(--mut);margin-bottom:8px"></small>
- <details id="mpAdv" style="margin:6px 0 10px;color:var(--mut)"><summary style="cursor:pointer">Connection helper (only if you cannot connect)</summary><p style="font-size:13px;margin:8px 0">The game already tries free public relay servers. If your friend is still far away and it fails, add your own relay (a TURN server from a provider such as Metered, Twilio or Cloudflare). Only one of you needs to add it.</p><label for="tu">Relay address (turn:… or turns:…)</label><input id="tu" autocomplete="off" placeholder="turn:relay.example.com:443"><label for="tn">Username</label><input id="tn" autocomplete="off"><label for="tc">Password</label><input id="tc" type="password" autocomplete="off"><p style="font-size:13px;margin:14px 0 6px"><b>Cloud mode (host only)</b>: if a direct connection is impossible, the song goes through temporary storage in your own Supabase project and is deleted as soon as your friend has it. Game messages travel through the public message servers. The key stays in this browser and is never sent to your friend.</p><label for="cu">Supabase URL</label><input id="cu" autocomplete="off" placeholder="https://your-project.supabase.co"><label for="ck">Supabase publishable key</label><input id="ck" type="password" autocomplete="off"><label for="cb">Storage bucket</label><input id="cb" autocomplete="off" placeholder="osu-temp-music"><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input id="cf" type="checkbox" style="width:auto"> Always use cloud mode (skip the direct connection)</label></details>
+ <details id="mpAdv" style="margin:6px 0 10px;color:var(--mut)"><summary style="cursor:pointer">Connection helper (only if you cannot connect)</summary><p style="font-size:13px;margin:8px 0">The game tries direct, then free public relays, then cloud mode automatically. Nothing here is required.</p><label for="tu">Relay address (turn:… or turns:…)</label><input id="tu" autocomplete="off" placeholder="turn:relay.example.com:443"><label for="tn">Username</label><input id="tn" autocomplete="off"><label for="tc">Password</label><input id="tc" type="password" autocomplete="off"><p style="font-size:13px;margin:14px 0 6px"><b>Cloud mode</b> already works with no setup: when a direct connection is impossible, the game and the song travel through the public message servers. <b>Optional (host only):</b> add your own Supabase storage so big songs go through temporary storage instead (deleted as soon as your friend has it). The key stays in this browser and is never sent to your friend.</p><label for="cu">Supabase URL</label><input id="cu" autocomplete="off" placeholder="https://your-project.supabase.co"><label for="ck">Supabase publishable key</label><input id="ck" type="password" autocomplete="off"><label for="cb">Storage bucket</label><input id="cb" autocomplete="off" placeholder="osu-temp-music"><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input id="cf" type="checkbox" style="width:auto"> Always use cloud mode (skip the direct connection)</label><button id="cts" class="alt" type="button" style="margin-top:10px">Test storage setup</button><p id="ctr" style="font-size:13px;margin:8px 0;white-space:pre-line"></p><p style="font-size:12px;margin:4px 0">Needs these permissions for the anon role on the bucket: insert, select and delete.</p></details>
  <div class="go"><button id="mpready" style="display:none">I'm ready</button><button id="mpgo" style="display:none">Start the match</button><button id="mpback" class="alt">Back</button></div>
 </section>
 <div id="ver"></div>
@@ -405,11 +405,12 @@ let CLOUDWAIT=15000;
 function customCloud(){try{const v=JSON.parse(localStorage.getItem('dc:cloud'));return v&&v.u&&v.k?{u:v.u.replace(/\/+$/,''),k:v.k,b:v.b||'osu-temp-music',f:!!v.f}:null}catch(e){return null}}
 function cloudIn(m,x,u){if(m.mode!=='cloud'||u!==m.cb||x.f===m.role||MP!==m)return;m.rx=performance.now();onMsg(x.d)}
 function switchCloud(m){if(MP!==m||m.role!=='host'||m.mode==='cloud'||(m.dc&&m.dc.readyState==='open'))return;
- if(!customCloud()){mps('Could not connect directly. For a far-away friend, add your storage details under "Connection helper" (cloud mode), then create a new room. You can also add your own relay there.');return}
  if(!m.ansVia){mps('Waiting for your friend…');return}m.cb=m.ansVia;m.mode='cloud';m.sig.pubTo(m.cb,JSON.stringify({t:'cloud'}));cloudStart(m)}
 async function cloudStart(m){if(MP!==m)return;m.mode='cloud';m.sq=0;clearInterval(m.iv);try{m.pc.close()}catch(e){}m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1500);
- $('mpRt').textContent='Connection: cloud mode (through public message servers, with the song sent via temporary storage)';
- if(m.role==='host'){try{mps('Cloud mode. Uploading the song…');setMy('sending',null);const url=await cloudUpload(m);send({k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size,url});setMy('waiting');mps('Song uploaded. Waiting for your friend to download it…')}catch(e){mps(e.message||String(e))}}
+ $('mpRt').textContent=customCloud()?'Connection: cloud mode (message servers, song via your temporary storage)':'Connection: cloud mode (everything goes through the public message servers)';
+ if(m.role==='host'){try{const info={k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size};
+  if(customCloud()){mps('Cloud mode. Uploading the song…');setMy('sending',null);info.url=await cloudUpload(m);send(info);setMy('waiting');mps('Song uploaded. Waiting for your friend to download it…')}
+  else{mps('Cloud mode. Sending the song through the message servers…');await cloudStream(m,info)}}catch(e){mps(e.message||String(e))}}
  else{mps('Cloud mode. Waiting for the song…');setMy('syncing');m.sp=syncClock(m)}}
 async function cloudUpload(m){const c=customCloud();if(!c)throw new Error('Add your storage details first.');const ext=((SONGFILE.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,''))||'mp3',path=m.code+'/'+Math.random().toString(36).slice(2,10)+'.'+ext,h={apikey:c.k,Authorization:'Bearer '+c.k};
  let r;try{r=await fetch(c.u+'/storage/v1/object/'+c.b+'/'+path,{method:'POST',headers:{...h,'Content-Type':SONGFILE.type||'audio/mpeg'},body:SONGFILE})}catch(e){throw new Error('Could not reach your storage. Check the URL.')}
@@ -418,11 +419,25 @@ async function cloudUpload(m){const c=customCloud();if(!c)throw new Error('Add y
  return c.u+'/storage/v1'+(await r.json()).signedURL}
 async function cloudDownload(m,url){const r=await fetch(url);if(!r.ok)throw new Error('Song download failed ('+r.status+').');const tot=+r.headers.get('content-length')||m.size,rd=r.body.getReader(),parts=[];let got=0,lp=-1;
  for(;;){const{value,done}=await rd.read();if(done)break;parts.push(value);got+=value.length;const pc=tot?Math.min(99,Math.round(got/tot*100)):0;if(pc!==lp){lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}}m.chunks=parts}
+// Song sent in 24 KB pieces with acknowledgements, so lost or late pieces are simply sent again.
+const b64enc=u=>{let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
+async function cloudStream(m,info){const ab=new Uint8Array(await SONGFILE.arrayBuffer()),N=24576,total=Math.ceil(ab.length/N),WIN=12;info.cn=total;send(info);
+ const c=m.cs={base:0,next:0,dup:0,t:Date.now()};
+ const pump=()=>{if(MP!==m||m.mode!=='cloud')return;while(c.next<total&&c.next-c.base<WIN){const i=c.next++;send({k:'sc',i,d:b64enc(ab.subarray(i*N,(i+1)*N))})}
+  if(!c.done){const pc=Math.round(c.base/total*100);setMy('sending',pc);mps('Sending the song… '+pc+'%')}
+  if(c.base>=total&&!c.done){c.done=1;clearInterval(c.w);send({k:'songend'});setMy('waiting');mps('Song sent. Waiting for your friend to get ready…')}};
+ m.ack=i=>{if(i>c.base){c.base=i;c.dup=0;c.t=Date.now()}else if(i===c.base&&c.next>c.base&&++c.dup>=2){c.next=c.base;c.dup=0}pump()};
+ c.w=setInterval(()=>{if(Date.now()-c.t>6000&&c.next>c.base&&!c.done){c.next=c.base;c.t=Date.now();pump()}},2000);pump()}
+function cloudChunk(m,p){if(p.i===m.exp){const r=atob(p.d),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);m.chunks.push(u);m.got+=u.length;m.exp++;
+  const pc=Math.min(99,Math.round(m.exp/m.cn*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}if(m.exp%6===0||m.exp===m.cn)send({k:'ak',i:m.exp})}
+ else send({k:'ak',i:m.exp})}
 function cloudDelete(m){if(m.role!=='host'||!m.cpath)return;const c=customCloud();if(!c)return;const p=m.cpath;m.cpath=null;try{fetch(c.u+'/storage/v1/object/'+c.b+'/'+p,{method:'DELETE',headers:{apikey:c.k,Authorization:'Bearer '+c.k},keepalive:true}).catch(()=>{})}catch(e){}}
 function finishSong(){guard(async()=>{mps('Preparing the song…');setMy('decoding');await MP.sp;buf=await AC.decodeAudioData(await new Blob(MP.chunks).arrayBuffer());MP.chunks=[];$('mpready').style.display='';setMy('loaded');mps('Song loaded. Tap "I\'m ready".')})()}
 function onMsg(p){if(!MP)return;switch(p.k){
  case'st':MP.ps={s:p.s,p:p.p};renderPS();if(MP.role==='host'&&MP.cpath&&(p.s==='loaded'||p.s==='ready'))cloudDelete(MP);break;
- case'room':if(MP.role!=='guest')break;MP.size=p.size;MP.chunks=[];MP.got=0;fname=p.fname;TEMPO=p.tempo;SEED=p.seed;sel=p.sel;diff=p.diff;setMy('receiving',0);if(p.url)guard(async()=>{await cloudDownload(MP,p.url);finishSong()})();break;
+ case'room':if(MP.role!=='guest')break;MP.size=p.size;MP.chunks=[];MP.got=0;fname=p.fname;TEMPO=p.tempo;SEED=p.seed;sel=p.sel;diff=p.diff;MP.cn=p.cn;MP.exp=0;MP.lp=-1;setMy('receiving',0);if(p.url)guard(async()=>{await cloudDownload(MP,p.url);finishSong()})();break;
+ case'sc':if(MP.role==='guest'&&MP.cn)cloudChunk(MP,p);break;
+ case'ak':if(MP.role==='host'&&MP.ack)MP.ack(p.i);break;
  case'songend':if(MP.role!=='guest')break;finishSong();break;
  case'ping':if(MP.role==='host')send({k:'pong',t:p.t,th:Date.now()});break;
  case'pong':if(MP.pg)MP.pg(p.t,p.th);break;
@@ -440,7 +455,7 @@ function onMsg(p){if(!MP)return;switch(p.k){
 function startHost(){if(!MP||!MP.ready)return;notes=build();place();MP.startAt=Date.now()+4500;MP.notes=notes;
  send({k:'start',at:MP.startAt,notes:notes.map(n=>[+n.t.toFixed(3),+n.s.toFixed(2),n.big?1:0,n.num,n.grp,n.nx,n.ny])});go()}
 function modeVis(){document.querySelectorAll('.modes').forEach(e=>e.style.display=MP?'none':'')}
-function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();clearInterval(m.iv);clearInterval(m.hb);clearTimeout(m.cloudT);cloudDelete(m);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
+function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();clearInterval(m.iv);clearInterval(m.hb);clearTimeout(m.cloudT);if(m.cs)clearInterval(m.cs.w);cloudDelete(m);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
 function mpLeave(){if(MP)send({k:'leave'});mpEnd()}
 $('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',()=>{if(MP)send({k:'leave'})});
 $('mpready').onclick=()=>{AC.resume();send({k:'ready'});setMy('ready');$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
@@ -449,8 +464,20 @@ $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
 ['tu','tn','tc'].forEach(id=>{const t=customTurn();if(t)$(id).value=t[{tu:'u',tn:'n',tc:'c'}[id]]||'';$(id).oninput=()=>{try{localStorage.setItem('dc:turn',JSON.stringify({u:$('tu').value.trim(),n:$('tn').value.trim(),c:$('tc').value}))}catch(e){}}});
 ['cu','ck','cb'].forEach(id=>{const c=customCloud(),k={cu:'u',ck:'k',cb:'b'}[id];if(c)$(id).value=c[k]||'';});{const c=customCloud();if(c)$('cf').checked=c.f}
 const saveCloud=()=>{try{localStorage.setItem('dc:cloud',JSON.stringify({u:$('cu').value.trim(),k:$('ck').value.trim(),b:$('cb').value.trim(),f:$('cf').checked}))}catch(e){}};['cu','ck','cb'].forEach(id=>$(id).oninput=saveCloud);$('cf').onchange=saveCloud;
+async function testCloud(){const out=$('ctr'),c=customCloud();if(!c){out.textContent='Enter the Supabase URL and the publishable key first.';return}
+ const h={apikey:c.k,Authorization:'Bearer '+c.k},path='test/'+Math.random().toString(36).slice(2,9)+'.txt',base=c.u+'/storage/v1/object/',L=['Testing '+c.u+' …'],show=()=>out.textContent=L.join('\n');
+ const hint=(st,b)=>st===401||st===403?'The key or the bucket permissions were refused. Use the publishable (anon) key and give anon insert, select and delete access to the bucket.':st===404||/bucket not found/i.test(b)?'Bucket "'+c.b+'" was not found. Check the bucket name.':st===413?'The file was too large for the bucket.':'Unexpected answer from storage.';
+ show();try{let r=await fetch(base+c.b+'/'+path,{method:'POST',headers:{...h,'Content-Type':'text/plain'},body:'ok'});const t=await r.text().catch(()=>'');
+  if(!r.ok){L.push('✗ Upload ('+r.status+'): '+hint(r.status,t));show();return}L.push('✓ Upload works');show();
+  r=await fetch(base+'sign/'+c.b+'/'+path,{method:'POST',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:60})});
+  if(!r.ok)L.push('✗ Download link ('+r.status+'): anon needs select access on the bucket.');
+  else{const u=c.u+'/storage/v1'+(await r.json()).signedURL;L.push('✓ Download link works');const d=await fetch(u);L.push(d.ok&&(await d.text())==='ok'?'✓ Your friend can download it (no key needed)':'✗ Download failed ('+d.status+')')}
+  show();r=await fetch(base+c.b+'/'+path,{method:'DELETE',headers:h});L.push(r.ok?'✓ Delete works':'✗ Delete ('+r.status+'): anon needs delete access, otherwise songs would stay in storage.');
+  L.push(L.some(x=>x[0]==='✗')?'\nFix the items marked ✗, then test again.':'\nCloud mode is ready.')}
+ catch(e){L.push('✗ Could not reach '+c.u+'. Check the URL (it looks like https://abcd1234.supabase.co) and your internet connection.')}show()}
+$('cts').onclick=testCloud;
 // ===== version, invite links =====
-const VERSION='2.4',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+const VERSION='2.6',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
 const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}
