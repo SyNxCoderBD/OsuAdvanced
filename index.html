@@ -57,6 +57,20 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 #mp textarea{width:100%;padding:10px 12px;border-radius:10px;border:2px solid #4a2a5c;background:var(--card);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:none;margin-bottom:8px;word-break:break-all}
 #mpP{margin:12px 0;padding:12px 14px;border:2px solid #4a2a5c;border-radius:12px;background:var(--card)}#mpP .pl{display:flex;justify-content:space-between;gap:10px;font-weight:600}#mpP .pl span{color:var(--mut);font-weight:400;text-align:right}#mpP .trk{height:10px;background:#14061f;border-radius:6px;overflow:hidden;margin-top:8px}#mpPb{height:100%;width:0;background:linear-gradient(90deg,var(--mag),var(--gold));transition:width .2s}
 #ver{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);text-align:center;font-size:12px;color:var(--mut);opacity:.75;pointer-events:none;z-index:1}#pz small{color:var(--mut)}
+#pz{overflow-y:auto;justify-content:flex-start;padding:24px 0}#pz>:first-child{margin-top:auto}#pz>:last-child{margin-bottom:auto}
+#pzc{font:400 34px Monoton,Impact,sans-serif;color:var(--gold);letter-spacing:2px}
+#chat{margin:12px 0;border:2px solid #4a2a5c;border-radius:12px;background:var(--card);padding:10px;text-align:left}
+#chl{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:30px}
+#chl .sys{align-self:center;color:var(--mut);font-size:12px}
+#chl .cmg{display:flex;flex-direction:column;align-items:flex-start;max-width:100%}#chl .cmg.me{align-items:flex-end}
+#chl .nm{font-size:11px;color:var(--mut);margin:0 6px}
+#chl .cmb{background:#33123f;border-radius:12px;padding:6px 10px;max-width:86%;word-break:break-word;font-size:14px;-webkit-user-select:text;user-select:text}
+#chl .me .cmb{background:#5a1f55}
+#chl .cmr{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+#chl .cmr button{padding:1px 8px;font-size:13px;border-radius:12px;background:#24102f;border:1px solid #5a3670;color:var(--ink);box-shadow:none;font-weight:400}
+#chl .cmr button.on{border-color:var(--cy);background:#1d3b45}
+.chr{display:flex;gap:6px;margin-top:8px}.chr input{flex:1;padding:9px 12px;border-radius:10px;border:2px solid #4a2a5c;background:#14061f;color:var(--ink);font:inherit;-webkit-user-select:text;user-select:text}.chr button{padding:8px 14px;font-size:14px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 74px);max-width:80vw;background:#24102fe6;border:1px solid #5a3670;color:var(--ink);padding:8px 14px;border-radius:14px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:4}#toast.on{opacity:1}
 </style></head><body>
 
 <section class="scr on" id="up">
@@ -64,7 +78,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <p>Drop in any song. We pull the beats out of it, you pick which ones to play, and glowing circles appear in time. Click each one as the ring closes in.</p>
  <label id="drop" tabindex="-1"><input type="file" id="f" accept="audio/*">Choose a song, or drop it here<br><small style="color:var(--mut);font-weight:400">MP3, WAV, OGG or M4A. It stays in your browser.</small></label>
  <div id="err"></div>
- <button id="mpj" class="alt">Join a friend's co-op room</button>
+ <button id="tutb" class="alt" style="margin-right:8px">▶ How to play</button><button id="mpj" class="alt">Join a friend's co-op room</button>
  <div class="keys"><span>Click or tap the circles in order</span><span><kbd>Z</kbd> / <kbd>X</kbd> click at your cursor</span><span><kbd>Q</kbd> toggles auto assist</span></div>
 </section>
 
@@ -87,35 +101,45 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 </section>
 
 <button id="as2" class="alt as"></button>
+<section class="scr" id="tut">
+ <h2>How to play</h2>
+ <canvas id="tvc" width="800" height="450" style="width:100%;border-radius:14px;background:#14061f;display:block" aria-label="Animated tutorial"></canvas>
+ <div class="go" style="margin-top:10px"><button id="tvp" class="alt">Pause</button><button id="tvr" class="alt">Restart</button></div>
+ <p id="tvcap" style="min-height:52px;color:var(--ink);font-weight:600;margin:12px 0 6px"></p>
+ <div class="row" id="tvch"></div>
+ <div class="go"><button id="tvtry">Try it yourself</button><button id="tvback" class="alt">Back</button></div>
+</section>
 <section class="scr" id="mp">
  <h2 id="mpt">Co-op</h2>
  <p>Take turns: one of you plays 30 seconds, the other plays the next 30, and so on, with one shared score, combo and health bar. Works across phone and desktop. No auto assist, Auto point or Autoplay in co-op.</p>
  <div id="mpH" style="display:none"><div class="go"><button id="mpmk">Create room</button></div><div id="rcode"></div><div id="mpL" class="go" style="display:none"><button id="cpl" class="alt">Copy invite link</button><button id="shl" class="alt" style="display:none">Share link</button></div></div>
  <div id="mpG" style="display:none"><label for="rc">Room code</label><input id="rc" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="X7KQ2M"><div class="go"><button id="jn">Join room</button></div></div>
  <div id="mpP" style="display:none"><div class="pl"><b id="mpPn">Partner</b><span id="mpPs"></span></div><div class="trk"><div id="mpPb"></div></div></div>
- <p id="mps"></p><small id="mpRt" style="display:block;color:var(--mut);margin-bottom:8px"></small>
+ <p id="mps"></p><small id="mpUp" style="display:block;color:var(--mut);margin-bottom:4px"></small><small id="mpRt" style="display:block;color:var(--mut);margin-bottom:8px"></small>
  <details id="mpAdv" style="margin:6px 0 10px;color:var(--mut)"><summary style="cursor:pointer">Connection helper (only if you cannot connect)</summary><p style="font-size:13px;margin:8px 0">The game tries direct, then free public relays, then cloud mode automatically. Nothing here is required.</p><label for="tu">Relay address (turn:… or turns:…)</label><input id="tu" autocomplete="off" placeholder="turn:relay.example.com:443"><label for="tn">Username</label><input id="tn" autocomplete="off"><label for="tc">Password</label><input id="tc" type="password" autocomplete="off"><p style="font-size:13px;margin:14px 0 6px"><b>Cloud mode</b> already works with no setup: when a direct connection is impossible, the game and the song travel through the public message servers. <b>Optional (host only):</b> add your own Supabase storage so big songs go through temporary storage instead (deleted as soon as your friend has it). The key stays in this browser and is never sent to your friend.</p><label for="cu">Supabase URL</label><input id="cu" autocomplete="off" placeholder="https://your-project.supabase.co"><label for="ck">Supabase publishable key</label><input id="ck" type="password" autocomplete="off"><label for="cb">Storage bucket</label><input id="cb" autocomplete="off" placeholder="osu-temp-music"><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input id="cf" type="checkbox" style="width:auto"> Always use cloud mode (skip the direct connection)</label><button id="cts" class="alt" type="button" style="margin-top:10px">Test storage setup</button><p id="ctr" style="font-size:13px;margin:8px 0;white-space:pre-line"></p><p style="font-size:12px;margin:4px 0">Needs these permissions for the anon role on the bucket: insert, select and delete.</p></details>
  <div class="go"><button id="mpready" style="display:none">I'm ready</button><button id="mpgo" style="display:none">Start the match</button><button id="mpback" class="alt">Back</button></div>
+ <div id="cm_mp"></div>
 </section>
 <div id="ver"></div>
+<div id="chat" style="display:none"><div id="chl"></div><div class="chr"><input id="chi" maxlength="200" placeholder="Message your teammate…" autocomplete="off"><button id="chs">Send</button></div></div><div id="toast"></div><input type="file" id="f2" accept="audio/*" style="display:none">
 <button id="pzb" aria-label="Pause">❚❚</button>
-<div id="pz"><h2>Paused</h2><div class="vols"></div><div class="modes"></div><button id="rz">Resume</button><button id="qt" class="alt">Back to menu</button><small id="verp"></small></div>
+<div id="pz"><div id="pzc" style="display:none"></div><h2 id="pzt">Paused</h2><p id="pzm" style="display:none;text-align:center;max-width:340px;margin:0 0 6px"></p><div class="vols"></div><div class="modes"></div><button id="rz">Resume</button><button id="pzend" class="alt" style="display:none">End match for everyone</button><div id="cm_pz" style="width:min(360px,86vw)"></div><button id="qt" class="alt">Back to menu</button><small id="verp"></small></div>
 <canvas id="cv"></canvas>
 
 <section class="scr" id="end">
  <h2 id="et">Track complete</h2>
  <p class="rank" id="rk">A</p>
  <div class="stats" id="st"></div><p id="etm"></p><p id="etp"></p>
- <div class="go"><button id="again">Play again</button><button id="chg" class="alt">Change beats</button><button id="nw" class="alt">New song</button></div>
+ <div class="go"><button id="again">Play again</button><button id="chg" class="alt">Change beats</button><button id="nw" class="alt">New song</button><button id="nwm" class="alt" style="display:none">Change music</button></div><div id="cm_end"></div>
 </section>
 
 <script>
 const $=i=>document.getElementById(i),cv=$('cv');
-const show=n=>{document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===n));cv.style.display=n==='game'?'block':'none';$('as2').style.display=n==='game'&&!MP?'block':'none';$('pzb').style.display=n==='game'?'block':'none';$('ver').style.display=n==='game'?'none':'block'};
+const show=n=>{document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===n));cv.style.display=n==='game'?'block':'none';$('as2').style.display=n==='game'&&!MP?'block':'none';$('pzb').style.display=n==='game'?'block':'none';$('ver').style.display=n==='game'?'none':'block';if(typeof chatPlace==='function')chatPlace(n)};
 const B={beat:['Main beat','Steady pulse locked to the song tempo. Easiest.'],kick:['Kick & bass','Every low thump found in the spectrum'],snare:['Snare & clap','Backbeat snaps from the mids'],hat:['Hi-hats','Fast, shimmery top end. Busy.'],all:['Full mix','Every onset across the spectrum']};
 let AC,buf,bands={},sel='beat',diff=.45,notes=[],pv=null,G=null,W,H,cx,gy,u,Z,dpr=1;
-const LEAD=1.5,tick=()=>new Promise(r=>setTimeout(r,0));
-const P=(p,m)=>{$('bar').style.width=p*100+'%';$('msg').textContent=m};
+let LEAD=1.9;const leadCap=()=>Math.min(2.7,7*diff)-.3,lead=()=>Math.min(LEAD,leadCap()),tick=()=>new Promise(r=>setTimeout(r,0));
+const P=(p,m)=>{$('bar').style.width=p*100+'%';$('msg').textContent=m;if(MP&&MP.role==='host')setMy('analyzing',Math.round(p*100))};
 
 $('f').onchange=e=>e.target.files[0]&&analyze(e.target.files[0]);
 const dz=$('drop');dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};dz.ondragleave=()=>dz.classList.remove('drag');
@@ -156,7 +180,7 @@ async function extract(data,sr,cb){
  const out={};ks.forEach((k,b)=>out[k]=pick(odf[b],sr));const t=tempo(odf,sr);out.beat=t.beats;out.bpm=t.bpm;return out}
 //DSP-END
 async function analyze(file){
- SONGFILE=file;fname=file.name.replace(/\.[^.]+$/,'');show('wait');AC=AC||new(window.AudioContext||window.webkitAudioContext)();$('err').textContent='';
+ PR=false;SONGFILE=file;fname=file.name.replace(/\.[^.]+$/,'');show('wait');AC=AC||new(window.AudioContext||window.webkitAudioContext)();$('err').textContent='';
  try{P(.03,'Decoding '+file.name+'…');buf=await AC.decodeAudioData(await file.arrayBuffer())}
  catch(e){show('up');$('err').textContent="Couldn't read that file. Try an MP3, WAV, OGG or M4A.";return}
  P(.08,'Mixing down to mono…');await tick();const ch=buf.numberOfChannels,len=buf.length,mono=new Float32Array(len);
@@ -172,7 +196,7 @@ function build(){
  let out=[];for(const n of src){if(n.t<.9)continue;const q=out[out.length-1];if(!q||n.t-q.t>=diff)out.push({t:n.t,s:n.s});else if(n.s>q.s)out[out.length-1]={t:n.t,s:n.s}}
  const ss=out.map(n=>n.s).sort((a,b)=>a-b),th=ss[Math.floor(ss.length*.8)]||1;
  out.forEach((n,i)=>{n.num=i%4+1;n.grp=Math.floor(i/4);n.big=n.s>=th&&i>0;n.done=0});return out}
-function pickUI(){$('info').textContent=fname+' · '+Math.floor(buf.duration/60)+':'+String(Math.floor(buf.duration%60)).padStart(2,'0')+' · about '+bpm()+' BPM';
+function pickUI(){if(MP&&MP.role==='host')setMy('picking');$('info').textContent=fname+' · '+Math.floor(buf.duration/60)+':'+String(Math.floor(buf.duration%60)).padStart(2,'0')+' · about '+bpm()+' BPM';
  $('cards').innerHTML=Object.keys(B).map(k=>`<label class="card"><input type="radio" name="bt" value="${k}" ${k==sel?'checked':''}><b>${B[k][0]}</b><span>${B[k][1]}</span><i id="c_${k}"></i></label>`).join('');
  document.querySelectorAll('[name=bt]').forEach(r=>r.onchange=()=>{sel=r.value;refresh()});refresh()}
 function refresh(){stopPv();const s0=sel;for(const k in B){sel=k;$('c_'+k).textContent=build().length+' beats'}sel=s0;notes=build();$('warn').textContent='';
@@ -190,37 +214,44 @@ $('pv').onclick=()=>{if(pv)return stopPv();if(!notes.length){$('warn').textConte
  pv={s,g,t0,o};$('pv').textContent='Stop preview';$('ph').style.display='block';s.onended=()=>{if(pv&&pv.s===s)stopPv()}};
 $('other').onclick=()=>{stopPv();show('up')};
 
-let MP=null,SB=null,SONGFILE=null,MPM='',VM=.8,VS=.7,apt=false,aplay=false,assist=true,tp,CR,S=1,ox=0,oy=0,fname='',SEED=0,TEMPO=120,WV=new Float32Array(1200);
+let PR=false,MP=null,SB=null,SONGFILE=null,MPM='',VM=.8,VS=.7,apt=false,aplay=false,assist=true,tp,CR,S=1,ox=0,oy=0,fname='',SEED=0,TEMPO=120,WV=new Float32Array(1200);
 const BK=Array.from({length:16},(_,i)=>({x:i*.137%1,y:i*.291%1,r:22+(i*17)%48,s:.006+(i%5)*.003})),C3=['#ff2e93','#2ee6d6','#b46bff'],STR=Array.from({length:70},(_,i)=>({x:(i*97%100)/100,y:(i*53%100)/100,p:i*1.7,s:.5+(i%3)*.6}));
 function bpm(){return TEMPO}
 const setAs=()=>document.querySelectorAll('.as').forEach(b=>{b.textContent='Auto assist: '+(assist?'ON':'OFF');b.classList.toggle('on',assist)});
 document.querySelectorAll('.as').forEach(b=>b.onclick=()=>{if(MP)return;assist=!assist;setAs();b.blur()});setAs();
-$('play').onclick=go;$('again').onclick=()=>MP&&MP.role==='host'?startHost():go();$('chg').onclick=()=>{show('pick');refresh()};$('nw').onclick=()=>{if(MP)mpLeave();show('up')};
+$('play').onclick=()=>MP&&MP.role==='host'?coopNext():go();$('again').onclick=()=>MP&&MP.role==='host'?startHost():go();$('chg').onclick=()=>{show('pick');refresh()};$('nw').onclick=()=>{if(MP)mpLeave();PR=false;show('up')};
 const SEGL=30,actor=t=>{const s=Math.floor(t/SEGL),ks=(G&&G.kos)||[];let o=s;for(const k of ks)if(k.sw&&k.sg<s)o++;const k=ks.find(x=>x.sg===s&&x.sw);if(k&&t>=k.t)o++;return o&1},own=n=>!MP||actor(n.t)===MP.me;
+function tgt2(){const a=tgt();if(!a)return;let i=a.i+1;while(notes[i]&&(notes[i].done||!own(notes[i])))i++;return notes[i]}
 function tgt(){let i=G.n;if(MP)while(notes[i]&&(notes[i].done||!own(notes[i])))i++;return notes[i]}
 const VW=800,VH=560,RV=56,PX=x=>ox+x*VW*S,PY=y=>oy+y*VH*S,R=n=>CR*(n.big?1.2:1);
 function place(){let r=((SEED||7)^(sel.charCodeAt(0)*7919)^Math.round(diff*1000))&0x7fffffff||7;const rn=()=>{r=(r*1103515245+12345)&0x7fffffff;return(r>>8)%1000/1000},m=RV*1.35,w=VW-2*m,h=VH-2*m;let x=VW/2,y=VH/2,a=0;
- notes.forEach((n,i)=>{const rr=RV*(n.big?1.2:1);let best=null,bs=-1e9;
-  for(let k=0;k<80;k++){let px,py;
-   if(k<40){const d=RV*(2.3+rn()*2.8),an=a+(rn()-.5)*(k<16?1.8:6.28);px=x+Math.cos(an)*d;py=y+Math.sin(an)*d}else{px=m+rn()*w;py=m+rn()*h}
+ notes.forEach((n,i)=>{const rr=RV*(n.big?1.2:1),gp=i?n.t-notes[i-1].t:9,dmax=Math.max(RV*2.4,Math.min(RV*5.1,800*gp));let best=null,bs=-1e9;
+  for(let k=0;k<120;k++){if(k>=80&&best)break;let px,py;
+   if(k<40){const d=RV*2.3+rn()*(dmax-RV*2.3),an=a+(rn()-.5)*(k<16?1.8:6.28);px=x+Math.cos(an)*d;py=y+Math.sin(an)*d}else{px=m+rn()*w;py=m+rn()*h;if(k<80&&Math.hypot(px-x,py-y)>dmax*1.3)continue}
    if(px<m||px>VW-m||py<m||py>VH-m)continue;
-   let md=1e9;for(let j=i-1;j>=0&&n.t-notes[j].t<LEAD+.4;j--)md=Math.min(md,Math.hypot(px-notes[j].vx,py-notes[j].vy)-RV*(notes[j].big?1.2:1)-rr);
+   let md=1e9;for(let j=i-1;j>=0&&n.t-notes[j].t<Math.min(2.7,7*diff);j--)md=Math.min(md,Math.hypot(px-notes[j].vx,py-notes[j].vy)-RV*(notes[j].big?1.2:1)-rr);
    if(md>=RV*.4){best={px,py};break}if(md>bs){bs=md;best={px,py}}}
   if(!best)best={px:VW/2,py:VH/2};n.vx=best.px;n.vy=best.py;n.nx=+(best.px/VW).toFixed(5);n.ny=+(best.py/VH).toFixed(5);a=Math.atan2(best.py-y,best.px-x);x=best.px;y=best.py})}
 function go(){stopPv();notes=MP&&MP.notes?MP.notes:build();notes.forEach((n,i)=>n.i=i);if(notes.length<4){show('pick');$('warn').textContent='Too few beats in this layer. Pick another or raise the crowd level.';return}
- AC.resume();$('pz').classList.remove('on');const s=AC.createBufferSource();s.buffer=buf;const mg=AC.createGain();mg.gain.value=VM;s.connect(mg);mg.connect(AC.destination);const T0=MP?AC.currentTime+Math.max(.5,(MP.startAt-MP.off-Date.now())/1000):AC.currentTime+3;s.start(T0);
- G={mp:MP?1:0,q:0,sg:-1,kos:[],pc:{},s,mg,T0,sc:0,combo:0,best:0,hp:100,p:0,g:0,m:0,fx:[],pa:[],tr:[],over:0,paused:0,fv:0,fe:-9,bn:[],ct:-9,bi:-1,n:0,mx:innerWidth/2,my:innerHeight/2,ms:0,off:+$('lat').value/1000};
+ AC.resume();$('pz').classList.remove('on');if(MP)MP.pz={me:0,them:0};pzReset();const s=AC.createBufferSource();s.buffer=buf;const mg=AC.createGain();mg.gain.value=VM;s.connect(mg);mg.connect(AC.destination);const T0=MP?AC.currentTime+Math.max(.5,(MP.startAt-MP.off-Date.now())/1000):AC.currentTime+3;s.start(T0);
+ G={practice:PR?1:0,mp:MP?1:0,q:0,sg:-1,kos:[],pc:{},s,mg,T0,sc:0,combo:0,best:0,hp:100,p:0,g:0,m:0,fx:[],pa:[],tr:[],over:0,paused:0,fv:0,fe:-9,bn:[],ct:-9,bi:-1,n:0,mx:innerWidth/2,my:innerHeight/2,ms:0,off:+$('lat').value/1000};
  s.onended=()=>{if(G&&G.s===s&&!G.over)fin('Track complete')};show('game');rs();if(notes[0].nx===undefined)place();modeVis();if(MP)setMy('playing')}
-function fin(t){if(G.over)return;G.over=1;try{G.s.stop()}catch(e){}if(MP)send({k:'end'});if(G.mp)t='Co-op · '+t;
+function fin(t){if(G.over)return;if(G.practice)t='Practice complete';G.over=1;try{G.s.stop()}catch(e){}if(MP&&MP.pz)MP.pz={me:0,them:0};G.paused=0;try{AC.resume()}catch(e){}if(MP)send({k:'end'});if(G.mp)t='Co-op · '+t;
  const tot=notes.length,acc=(G.p+.6*G.g)/tot,died=G.hp<=0,rk=died?'F':acc>=.95?'S':acc>=.85?'A':acc>=.7?'B':acc>=.5?'C':'D',key='dc:'+fname+sel+diff;let pb=0;
- try{pb=+localStorage.getItem(key)||0;if(G.auto)t+=' · Autoplay';else if(!died&&!G.mp&&G.sc>pb){localStorage.setItem(key,G.sc);t+=pb?' · New best!':''}}catch(e){}
+ try{pb=+localStorage.getItem(key)||0;if(G.auto)t+=' · Autoplay';else if(!died&&!G.mp&&!G.practice&&G.sc>pb){localStorage.setItem(key,G.sc);t+=pb?' · New best!':''}}catch(e){}
  $('et').textContent=t;$('rk').textContent=rk;
  $('st').innerHTML=[['Score',G.sc.toLocaleString()],['Best combo',G.best],['Perfect',G.p],['Good',G.g],['Missed',G.m],['Accuracy',Math.round(acc*100)+'%']].map(a=>`<div>${a[0]}<b>${a[1]}</b></div>`).join('');
- $('pz').classList.remove('on');const co=!!MP,gs=co&&MP.role==='guest';if(co)setMy('results');$('again').style.display=gs?'none':'';$('chg').style.display=co?'none':'';$('nw').textContent=co?'Leave co-op':'New song';$('etm').textContent=co?(gs?'Waiting for the host to play again…':'Press Play again to restart with your teammate.'):'';show('end')}
+ $('pz').classList.remove('on');const co=!!MP,gs=co&&MP.role==='guest';if(co)setMy('results');$('nwm').style.display=co&&!gs?'':'none';$('again').style.display=gs?'none':'';$('chg').style.display=co||G.practice?'none':'';$('nw').textContent=co?'Leave co-op':G.practice?'Back to menu':'New song';$('etm').textContent=co?(gs?'Waiting for the host to play again…':'Press Play again to restart with your teammate.'):(G.practice?'Nice! Go back to the menu, upload a song and play for real.':'');show('end')}
 function rs(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx=W/2;u=Math.min(W/13,H/8);tp=Math.max(76,u*.72+44);const bm=Math.max(20,u*.5),mx=Math.max(8,u*.15),Hf=H-tp-bm;S=Math.min((W-2*mx)/VW,Hf/VH);ox=(W-VW*S)/2;oy=tp+(Hf-VH*S)/2;CR=RV*S}
 addEventListener('resize',()=>G&&!G.over&&rs());
-function pause(on){if(!G||G.over)return;if(MP){$('pz').classList.toggle('on',on);return}G.paused=on;$('pz').classList.toggle('on',on);on?AC.suspend():AC.resume()}
-function quit(){if(G){G.over=1;try{G.s.stop()}catch(e){}}$('pz').classList.remove('on');AC.resume();const gs=MP&&MP.role==='guest';mpLeave();if(gs)show('up');else{show('pick');refresh()}}
+function pause(on){if(!G||G.over)return;if(MP){const pz=MP.pz||(MP.pz={me:0,them:0}),v=on?1:0;if(pz.me===v)return;pz.me=v;send({k:'pz',p:v});chatSys(v?'You paused the game.':'You are ready.');pzUpdate();return}G.paused=on;$('pz').classList.toggle('on',on);on?AC.suspend():AC.resume()}
+function pzUpdate(){const m=MP;if(!m||!G||G.over)return;const pz=m.pz||(m.pz={me:0,them:0}),any=pz.me||pz.them,rd=(pz.me?0:1)+(pz.them?0:1);
+ if(any&&!G.paused){G.paused=1;AC.suspend()}else if(!any&&G.paused){G.paused=0;AC.resume()}
+ $('pz').classList.toggle('on',!!any);$('pzc').style.display=any?'':'none';$('pzm').style.display=any?'':'none';
+ if(any){$('pzc').textContent='READY '+rd+'/2';$('pzt').textContent=pz.me?'Paused':'Partner paused';$('pzm').textContent=pz.me?(pz.them?'You both paused. The game continues when you are both ready.':'Press Resume when you are ready. The game continues when everyone is ready (2/2).'):'Waiting for your partner to resume. The game continues when everyone is ready (2/2).';$('rz').style.display=pz.me?'':'none';chatPlace('pz')}else CHAT.vis=false;
+ $('pzend').style.display=m.role==='host'?'':'none'}
+function pzReset(){$('pzc').style.display='none';$('pzm').style.display='none';$('pzend').style.display='none';$('rz').style.display='';$('pzt').textContent='Paused'}
+function quit(){if(G){G.over=1;try{G.s.stop()}catch(e){}}$('pz').classList.remove('on');AC.resume();const gs=MP&&MP.role==='guest';mpLeave();if(gs||PR){PR=false;show('up')}else{show('pick');refresh()}}
 $('rz').onclick=()=>pause(0);$('qt').onclick=quit;
 document.addEventListener('visibilitychange',()=>document.hidden&&G&&!G.over&&!MP&&pause(1));
 addEventListener('keydown',e=>{if(!G||G.over)return;const k=e.key.toLowerCase();
@@ -252,7 +283,7 @@ function step(){const st=AC.currentTime-G.T0-G.off;
  for(let i=G.n;i<notes.length&&notes[i].t<st-.18;i++){const n=notes[i];if(!n.done){if(!MP||own(n)){n.done=2;n.mt=st;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;thud();fxp('MISS',n,st,'#a58bbd');if(MP){let over=false;if(G.hp<=0)over=!koNow(st,Math.floor(n.t/SEGL));mpSend(n,'M');if(over)return fin('Out of energy')}}else if(st>n.t+.6){n.done=2;n.mt=st;n.wm=1;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;fxp('MISS',n,st,'#a58bbd');if(G.hp<=0&&!koNow(st,Math.floor(n.t/SEGL)))return fin('Out of energy')}}}
  while(notes[G.n]&&notes[G.n].done)G.n++;
  while(notes[G.bi+1]&&notes[G.bi+1].t<=st)G.bi++;
- if(G.hp<=0&&!MP)return fin('Out of energy');render(st)}
+ if(G.practice&&G.hp<60)G.hp=60;if(G.hp<=0&&!MP)return fin('Out of energy');render(st)}
 function back(c,st,pu,fev,qb){
  const g=c.createRadialGradient(cx,H*.45,0,cx,H*.45,Math.max(W,H)*.8);g.addColorStop(0,'#3a0f4a');g.addColorStop(.6,'#1d0a2b');g.addColorStop(1,'#0d0415');c.fillStyle=g;c.fillRect(0,0,W,H);
  c.globalCompositeOperation='lighter';
@@ -273,13 +304,14 @@ function circle(c,n,st){const x=PX(n.nx),y=PY(n.ny),r=R(n),col=n.big?'#ffc83d':C
   if(h){const f=c.createRadialGradient(x,y,0,x,y,r*1.6);f.addColorStop(0,col+'aa');f.addColorStop(1,col+'00');c.fillStyle=f;c.beginPath();c.arc(x,y,r*1.6,0,6.3);c.fill()}
   c.strokeStyle=h?'#fff':'#a58bbd';c.lineWidth=4;c.beginPath();c.arc(x,y,r*(h?1+q*.7:1-q*.3),0,6.3);c.stroke();
   if(h){c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc(x,y,r*(1+q*1.3),0,6.3);c.stroke()}c.globalAlpha=1;return}
- const T=n===tgt(),al=Math.min(1,(LEAD-(n.t-st))/.35),ap=1+2*Math.max(0,(n.t-st)/LEAD),pz=.5+.5*Math.sin(st*8);c.globalAlpha=al*(T?1:own(n)?.68:.3);
+ const T=n===tgt(),al=Math.min(1,(lead()-(n.t-st))/.35),ap=1+2*Math.max(0,(n.t-st)/lead()),pz=.5+.5*Math.sin(st*8);c.globalAlpha=al*(T?1:own(n)?.68:.3);
  const g=c.createRadialGradient(x-r*.3,y-r*.35,r*.1,x,y,r);g.addColorStop(0,col+'cc');g.addColorStop(.55,'#1d0a2b');g.addColorStop(1,col+'88');
  c.shadowColor=col;c.shadowBlur=T?36:8;c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.3);c.fill();c.strokeStyle=T?'#fff':col;c.lineWidth=T?(n.big?7:5):3;c.stroke();c.shadowBlur=0;
  c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc(x,y,r*.82,0,6.3);c.stroke();
  c.font=`800 ${r*.85}px Outfit,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.lineWidth=5;c.strokeStyle='#14061f';c.strokeText(n.num,x,y+2);c.fillStyle='#fff';c.fillText(n.num,x,y+2);c.textBaseline='alphabetic';
  if(T){c.globalAlpha=al*(.3+.4*pz);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.arc(x,y,r*(1.14+.07*pz),0,6.3);c.stroke();c.globalAlpha=al}
- c.globalAlpha=Math.min(1,(LEAD-(n.t-st))/.12)*(T?1:.85);c.strokeStyle=T?'#fff':col;c.lineWidth=T?4:3;c.shadowColor=T?'#fff':col;c.shadowBlur=T?12:0;c.beginPath();c.arc(x,y,r+CR*2.2*Math.max(0,(n.t-st)/LEAD),0,6.3);c.stroke();c.shadowBlur=0;c.globalAlpha=1}
+ if(!T&&n===G.t2){c.globalAlpha=al*.55;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,r*1.1,0,6.3);c.stroke()}
+ c.globalAlpha=Math.min(1,(lead()-(n.t-st))/.12)*(T?1:.85);c.strokeStyle=T?'#fff':col;c.lineWidth=T?4:3;c.shadowColor=T?'#fff':col;c.shadowBlur=T?12:0;c.beginPath();c.arc(x,y,r+CR*2.2*Math.max(0,(n.t-st)/lead()),0,6.3);c.stroke();c.shadowBlur=0;c.globalAlpha=1}
 
 function bar(c,x,y,w,h,v,col){c.fillStyle='#2a1038';c.beginPath();c.roundRect?c.roundRect(x,y,w,h,h/2):c.rect(x,y,w,h);c.fill();if(v>0){c.fillStyle=col;c.beginPath();c.roundRect?c.roundRect(x,y,Math.max(h,w*v),h,h/2):c.rect(x,y,w*v,h);c.fill()}}
 function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
@@ -288,10 +320,10 @@ function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
   if(G.tg>.02){const gl=c.createRadialGradient(cx,H/2,Math.min(W,H)*.42,cx,H/2,Math.max(W,H)*.75);gl.addColorStop(0,'rgba(255,200,61,0)');gl.addColorStop(1,'rgba(255,200,61,'+((.14+.06*pu)*G.tg)+')');c.fillStyle=gl;c.fillRect(0,0,W,H);
    const sg=Math.floor(Math.max(0,st)/SEGL);c.fillStyle='rgba(255,200,61,'+(.55*G.tg)+')';c.fillRect(0,0,W*Math.max(0,1-(st-sg*SEGL)/SEGL),3)}
   if(G.rp!==undefined){const q=st-G.rp;if(q>=0&&q<.9){c.strokeStyle='rgba(255,200,61,'+(.22*(1-q/.9))+')';c.lineWidth=5;c.beginPath();c.arc(cx,H/2,u*(1+q*9),0,6.3);c.stroke()}}}
- const hi=[];for(let i=Math.max(0,G.n-8);i<notes.length&&notes[i].t-st<LEAD;i++){const n=notes[i];if(!n.done||st-(n.ht||n.mt)<.35)hi.push(n)}
+ const hi=[];for(let i=Math.max(0,G.n-8);i<notes.length&&notes[i].t-st<lead();i++){const n=notes[i];if(!n.done||st-(n.ht||n.mt)<.35)hi.push(n)}
  const a=tgt(),b=a&&notes[a.i+1];
- if(a&&b&&b.t-st<LEAD){c.strokeStyle='#f3ead8';c.globalAlpha=.3;c.setLineDash([6,9]);c.lineWidth=2;c.beginPath();c.moveTo(PX(a.nx),PY(a.ny));c.lineTo(PX(b.nx),PY(b.ny));c.stroke();c.setLineDash([]);c.globalAlpha=1}
- for(let k=hi.length-1;k>=0;k--)circle(c,hi[k],st);
+ if(a&&b&&b.t-st<lead()){c.strokeStyle='#f3ead8';c.globalAlpha=.3;c.setLineDash([6,9]);c.lineWidth=2;c.beginPath();c.moveTo(PX(a.nx),PY(a.ny));c.lineTo(PX(b.nx),PY(b.ny));c.stroke();c.setLineDash([]);c.globalAlpha=1}
+ G.t2=tgt2();for(let k=hi.length-1;k>=0;k--)circle(c,hi[k],st);
  c.globalCompositeOperation='lighter';for(const q of G.pa){const t=st-q.st;if(t<0||t>.55)continue;c.globalAlpha=1-t/.55;c.fillStyle=q.c;c.beginPath();c.arc(q.x+q.vx*t,q.y+q.vy*t+u*3*t*t,3.5*(1-t),0,6.3);c.fill()}
  c.globalCompositeOperation='source-over';c.globalAlpha=1;
  c.textAlign='center';c.lineJoin='round';c.font=`800 ${Math.max(15,u*.36)}px Outfit,sans-serif`;
@@ -312,13 +344,14 @@ function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
  bar(c,W-bw-m,m+22,bw,6,fev?(G.fe-st)/8:G.fv,fev?'#ffc83d':'#b46bff');if(fev){c.textAlign='right';c.fillStyle='#ffc83d';c.font=`800 ${u*.3}px Outfit,sans-serif`;c.fillText('FEVER x2',W-m,m+48)}c.textAlign='left';
  bar(c,0,H-8,W,8,Math.max(0,Math.min(1,st/buf.duration)),'#ff2e93');
  if(G.combo>1){const k=1+.35*Math.exp(-(st-G.ct)*9);c.save();c.translate(m,H-24);c.scale(k,k);c.fillStyle='#ffc83d';c.shadowColor='#ffc83d';c.shadowBlur=14;c.font=`800 ${u*.9}px Outfit,sans-serif`;c.fillText(G.combo+'x',0,0);c.restore()}
+ if(G.practice){const h=G.p+G.g,tx=st<0?'Get ready! Click or tap each circle when its ring touches it.':h<4?'Click the BRIGHT circle when the ring touches it. Follow the numbers.':h<10?'Nice! Keep your combo going. A miss breaks it.':h<18?'Big gold circles are accents worth double points.':h<28?'Fill the purple bar to trigger FEVER: x2 score!':'Almost done. Keep the rhythm!';c.textAlign='center';c.font=`800 ${Math.max(14,u*.34)}px Outfit,sans-serif`;c.lineWidth=5;c.strokeStyle='#14061f';c.fillStyle='#ffc83d';c.strokeText(tx,cx,tp+u*.2);c.fillText(tx,cx,tp+u*.2)}
  if(st<0){c.textAlign='center';c.fillStyle='#f3ead8';c.font=`400 ${u*2*(1+.3*((-st)%1))}px Monoton,Impact,sans-serif`;c.fillText(Math.ceil(-st),cx,H*.45);c.font=`600 ${u*.32}px Outfit,sans-serif`;c.fillStyle='#a58bbd';c.fillText('The bright circle is always next. Click it as its ring closes in',cx,H*.45+u)}}
 const SV=()=>VS*1.5;
-try{const v=JSON.parse(localStorage.getItem('dc:vol'));if(v){VM=v.m;VS=v.s}}catch(e){}
-function volSync(){document.querySelectorAll('.vm').forEach(i=>{i.value=VM*100;i.nextElementSibling.textContent=Math.round(VM*100)+'%'});document.querySelectorAll('.vs').forEach(i=>{i.value=VS*100;i.nextElementSibling.textContent=Math.round(VS*100)+'%'})}
-document.querySelectorAll('.vols').forEach(e=>{e.innerHTML='<div class="lat"><label>Music</label><input type="range" class="vm" min="0" max="100" aria-label="Music volume"><output></output></div><div class="lat"><label>Click sound</label><input type="range" class="vs" min="0" max="100" aria-label="Click sound volume"><output></output></div>'});volSync();
-document.addEventListener('input',e=>{const t=e.target;if(t.classList.contains('vm')){VM=t.value/100;if(G&&G.mg)G.mg.gain.value=VM;if(pv)pv.g.gain.value=VM*.6}else if(t.classList.contains('vs'))VS=t.value/100;else return;
- volSync();try{localStorage.setItem('dc:vol',JSON.stringify({m:VM,s:VS}))}catch(x){}});
+try{const v=JSON.parse(localStorage.getItem('dc:vol'));if(v){VM=v.m;VS=v.s;if(v.a)LEAD=v.a}}catch(e){}
+function volSync(){document.querySelectorAll('.va').forEach(i=>{i.value=Math.round(LEAD*10);i.nextElementSibling.textContent=LEAD.toFixed(1)+' s'+(LEAD>leadCap()+.01?' (max '+leadCap().toFixed(1)+' here)':'')});document.querySelectorAll('.vm').forEach(i=>{i.value=VM*100;i.nextElementSibling.textContent=Math.round(VM*100)+'%'});document.querySelectorAll('.vs').forEach(i=>{i.value=VS*100;i.nextElementSibling.textContent=Math.round(VS*100)+'%'})}
+document.querySelectorAll('.vols').forEach(e=>{e.innerHTML='<div class="lat"><label>Music</label><input type="range" class="vm" min="0" max="100" aria-label="Music volume"><output></output></div><div class="lat"><label>Click sound</label><input type="range" class="vs" min="0" max="100" aria-label="Click sound volume"><output></output></div><div class="lat"><label>Approach</label><input type="range" class="va" min="10" max="26" aria-label="Circle approach time"><output></output></div><small style="color:var(--mut)">Approach: longer means the rings close in more slowly. Hit timing stays exactly on the beat.</small>'});volSync();
+document.addEventListener('input',e=>{const t=e.target;if(t.classList.contains('vm')){VM=t.value/100;if(G&&G.mg)G.mg.gain.value=VM;if(pv)pv.g.gain.value=VM*.6}else if(t.classList.contains('vs'))VS=t.value/100;else if(t.classList.contains('va'))LEAD=t.value/10;else return;
+ volSync();try{localStorage.setItem('dc:vol',JSON.stringify({m:VM,s:VS,a:LEAD}))}catch(x){}});
 document.addEventListener('change',e=>{if(e.target.classList.contains('vs')&&AC)ding()});
 function autoMove(st){while(notes[G.n]&&notes[G.n].done)G.n++;const n=notes[G.n];if(!n)return;
  const p=notes[G.n-1],tx=PX(n.nx),ty=PY(n.ny);let sx=cx,sy=H/2,t0=n.t-1.2;if(p){sx=PX(p.nx);sy=PY(p.ny);t0=p.t}
@@ -341,17 +374,19 @@ const unb64=t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';
 const pipe=async(u,S)=>new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new S('deflate-raw'))).arrayBuffer());
 async function pack(d){const u=new TextEncoder().encode(JSON.stringify({t:d.type,s:d.sdp}));return typeof CompressionStream!=='undefined'?'z'+b64u(await pipe(u,CompressionStream)):'r'+b64u(u)}
 async function unpack(c){try{c=c.replace(/\s+/g,'');const u=unb64(c.slice(1)),o=JSON.parse(new TextDecoder().decode(c[0]==='z'?await pipe(u,DecompressionStream):u));return{type:o.t,sdp:o.s}}catch(e){throw new Error('That code looks incomplete. Copy the whole code and try again.')}}
-const gathered=pc=>new Promise(ok=>{if(pc.iceGatheringState==='complete')return ok();const t=setTimeout(ok,9000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);ok()}})});
-const send=p=>{const m=MP;if(!m)return;if(m.mode==='cloud'){if(m.sig&&m.cb)m.sig.pubTo(m.cb,JSON.stringify({t:'data',f:m.role,i:++m.sq,d:p}))}else if(m.dc&&m.dc.readyState==='open')m.dc.send(JSON.stringify(p))};
+const gathered=pc=>new Promise(ok=>{if(pc.iceGatheringState==='complete')return ok();const t=setTimeout(ok,3000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);ok()}})});
+const viaMQ=m=>!(m.dc&&m.dc.readyState==='open')||m.mode==='cloud';
+const send=p=>{const m=MP;if(!m)return;if(!viaMQ(m)){m.dc.send(JSON.stringify(p));return}
+ if(!m.sig)return;const msg=JSON.stringify({t:'data',f:m.role,i:m.sq=(m.sq||0)+1,d:p});if(m.cb)m.sig.pubTo(m.cb,msg);else if(m.role==='guest')m.sig.pub(msg)};
 const guard=f=>async()=>{try{await f()}catch(e){mps(e.message||String(e))}};
 function mpShow(m){if(MP)mpLeave();G=null;MPM=m;if(apt)setApt(false);show('mp');$('mpt').textContent=m==='host'?'Host a co-op match':'Join a co-op match';
  $('mpH').style.display=m==='host'?'':'none';$('mpG').style.display=m==='join'?'':'none';$('mpmk').style.display='';$('rcode').textContent='';$('rc').value='';
- $('mpready').style.display=$('mpgo').style.display='none';$('mpL').style.display='none';$('mpP').style.display='none';$('mpRt').textContent='';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
-function mkPeer(role){if(typeof RTCPeerConnection==='undefined')throw new Error('This browser does not support direct connections.');AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
- const pc=new RTCPeerConnection(iceCfg()),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;
- pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed'){if(m.role==='host')switchCloud(m);else mps('Direct connection failed. Waiting to see if the host can switch to cloud mode…')}};return m}
+ $('mpready').style.display=$('mpgo').style.display='none';$('mpL').style.display='none';$('mpP').style.display='none';$('mpRt').textContent='';$('mpUp').textContent='';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
+function mkPeer(role){if(MP)mpLeave();if(typeof RTCPeerConnection==='undefined')throw new Error('This browser does not support direct connections.');AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
+ const pc=new RTCPeerConnection(iceCfg()),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;m.connP=new Promise(r=>{m.connOk=r});
+ pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed'&&m.mode!=='cloud')$('mpRt').textContent='Connection: through the message servers (a direct connection was not possible)'};return m}
 function wire(m,dc){m.dc=dc;dc.binaryType='arraybuffer';dc.onopen=()=>onOpen(m);dc.onclose=()=>{if(MP===m)onMsg({k:'leave'})};
- dc.onmessage=e=>{m.rx=performance.now();if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size){const pc=Math.min(99,Math.round(m.got/m.size*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}}}}}
+ dc.onmessage=e=>{m.rx=performance.now();if(!m.sess&&m.role==='guest')sessionStart(m);if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.t0=m.t0||performance.now();m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size){const pc=Math.min(99,Math.round(m.got/m.size*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'% '+spd(m.got,m.t0,m.size));setMy('receiving',pc)}}}}}
 // Room-code matchmaking: a tiny MQTT-over-WebSocket client passes the connection details through free public brokers.
 // Only the short handshake goes through them; the game itself runs directly between the two devices.
 const RC='ABCDEFGHJKMNPQRSTUVWXYZ23456789',BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
@@ -370,75 +405,100 @@ async function signal(code,role,m,onSig){const inT='osuadv/v1/'+code+'/'+(role==
  m.sig={pub(msg){cs.forEach(c=>c.pub(outT,msg))},pubTo(u,msg){cs.filter(c=>c.url===u).forEach(c=>c.pub(outT,msg))},close(){cs.forEach(c=>c.close())}};
  await Promise.all(BROKERS.map(async u=>{const c=await mqttConnect(u,inT,t=>{try{onSig(JSON.parse(t),u)}catch(e){}});if(c)cs.push(c)}));
  if(!cs.length)throw new Error('Could not reach the room service. Check your internet connection. (Hosted previews cannot connect.)')}
-async function createRoom(){if(!SONGFILE)throw new Error('Pick a song first.');const m=mkPeer('host');wire(m,m.pc.createDataChannel('g'));mps('Creating your room…');
+async function createRoom(){try{return await createRoom0()}catch(e){if(MP&&MP.role==='host')mpLeave();throw e}}
+async function createRoom0(){if(!SONGFILE)throw new Error('Pick a song first.');const m=mkPeer('host');wire(m,m.pc.createDataChannel('g'));mps('Creating your room…');
  const code=Array.from({length:6},()=>RC[Math.random()*RC.length|0]).join(''),n=Math.random().toString(36).slice(2,8);
- m.code=code;await m.pc.setLocalDescription(await m.pc.createOffer());await gathered(m.pc);const offer=JSON.stringify({t:'offer',n,d:await pack(m.pc.localDescription)});
- await signal(code,'host',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t!=='answer'||x.n!==n||m.answered||MP!==m)return;m.answered=1;m.ansVia=u;try{await m.pc.setRemoteDescription(await unpack(x.d));mps('Friend found! Connecting…');const cc=customCloud();m.cloudT=setTimeout(()=>switchCloud(m),cc&&cc.f?0:CLOUDWAIT)}catch(e){m.answered=0}});
+ m.code=code;startUpload(m);await m.pc.setLocalDescription(await m.pc.createOffer());await gathered(m.pc);const offer=JSON.stringify({t:'offer',n,d:await pack(m.pc.localDescription)});
+ await signal(code,'host',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='st'&&MP===m){m.ps={s:x.s,p:x.p};renderPS();if(x.s==='dlerr')dlFallback(m);return}if(x.t!=='answer'||x.n!==n||m.answered||MP!==m)return;m.answered=1;m.ansVia=u;m.cb=u;try{await m.pc.setRemoteDescription(await unpack(x.d));mps('Friend found! Connecting…');const cc=customCloud();sessionStart(m);if(cc&&cc.f)switchCloud(m)}catch(e){m.answered=0}});
  m.sig.pub(offer);m.iv=setInterval(()=>{if(m.answered||MP!==m){clearInterval(m.iv);return}m.sig.pub(offer)},2500);
  $('rcode').textContent=code;$('mpmk').style.display='none';m.link=inviteLink(code);$('mpL').style.display='';if(navigator.share)$('shl').style.display='';mps(LOC.protocol==='file:'?'Give this code to your friend. (Invite links only work once the game is on a website.) Waiting for them to join…':'Share the code or the invite link with your friend. Waiting for them to join…')}
 async function joinRoom(){const code=$('rc').value.trim().toUpperCase();if(code.length!==6)throw new Error('Enter the 6-character room code.');const m=mkPeer('guest');m.pc.ondatachannel=e=>wire(m,e.channel);mps('Looking for the room…');
- await signal(code,'guest',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='cloud'){if(m.mode!=='cloud'){m.cb=u;cloudStart(m)}return}if(x.t!=='offer'||m.got||MP!==m)return;m.got=1;
+ await signal(code,'guest',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='cloud'){if(m.mode!=='cloud'){m.cb=u;cloudStart(m)}return}if(x.t==='song'){if(m.songGot!==x.u&&!m.got2){m.songGot=x.u;m.size=x.sz;m.chunks=[];m.got=0;m.xd=0;mps('Downloading the song… (while connecting)');setMy('receiving',0);getSong(m,x.u)}return}if(x.t!=='offer'||m.got||MP!==m)return;m.got=1;
   try{await m.pc.setRemoteDescription(await unpack(x.d));await m.pc.setLocalDescription(await m.pc.createAnswer());await gathered(m.pc);
    const ans=JSON.stringify({t:'answer',n:x.n,d:await pack(m.pc.localDescription)});let k=0;m.sig.pub(ans);mps('Room found! Connecting…');
    m.iv=setInterval(()=>{if(MP!==m||m.mode==='cloud'||(m.dc&&m.dc.readyState==='open')||++k>12){clearInterval(m.iv);return}m.sig.pub(ans)},1500)}catch(e){m.got=0;mps('Could not use that room. Check the code.')}});
  setTimeout(()=>{if(MP===m&&!m.got)mps('No room answered. Check the code, and make sure your friend has created the room.')},12000)}
 function syncClock(m){return new Promise(ok=>{let n=0,best=1e9;m.pg=(t0,th)=>{const t1=Date.now(),rtt=t1-t0;if(rtt<best){best=rtt;m.off=th+rtt/2-t1}if(++n>=8)ok();else send({k:'ping',t:Date.now()})};send({k:'ping',t:Date.now()});setTimeout(ok,5000)})}
-async function streamSong(m){const ab=await SONGFILE.arrayBuffer(),dc=m.dc,N=16384;dc.bufferedAmountLowThreshold=1<<20;
- for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>4<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%10==0){const pc=Math.round(o/ab.byteLength*100);mps('Sending the song… '+pc+'%');setMy('sending',pc)}}
+async function streamSong(m){const ab=await SONGFILE.arrayBuffer(),dc=m.dc,mx=(m.pc.sctp&&m.pc.sctp.maxMessageSize)||0,N=Math.max(16384,Math.min(32768,mx||16384)),t0=performance.now();dc.bufferedAmountLowThreshold=2<<20;
+ for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>8<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%8==0){const pc=Math.round(o/ab.byteLength*100);mps('Sending the song… '+pc+'% '+spd(Math.max(0,o-dc.bufferedAmount),t0,ab.byteLength));setMy('sending',pc)}}
  send({k:'songend'});setMy('waiting');mps('Song sent. Waiting for your friend to get ready…')}
 async function routeInfo(m){try{const st=await m.pc.getStats();let pair=null;st.forEach(r=>{if(r.type==='transport'&&r.selectedCandidatePairId)pair=st.get(r.selectedCandidatePairId)});if(!pair)st.forEach(r=>{if(r.type==='candidate-pair'&&r.nominated&&r.state==='succeeded')pair=r});if(!pair)return;
  const l=st.get(pair.localCandidateId),r=st.get(pair.remoteCandidateId);if(!(l&&l.candidateType)&&!(r&&r.candidateType))return;const rel=(l&&l.candidateType==='relay')||(r&&r.candidateType==='relay');m.route=rel?'relay':'direct';
  $('mpRt').textContent=rel?'Connection: through a relay server (slightly slower, works on strict networks)':'Connection: direct (fastest)'}catch(e){}}
-function onOpen(m){if(MP!==m)return;if(m.mode==='cloud'){try{m.dc.close()}catch(e){}return}clearTimeout(m.cloudT);setTimeout(()=>routeInfo(m),600);clearInterval(m.iv);m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1000);if(m.sig)m.sig.close();if(m.role==='host'){mps('Friend connected! Sending the song…');setMy('connected');
-  send({k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size});streamSong(m)}else{mps('Connected! Waiting for the song…');setMy('syncing');m.sp=syncClock(m)}}
+function onOpen(m){if(MP!==m)return;if(m.mode==='cloud'){try{m.dc.close()}catch(e){}return}setTimeout(()=>routeInfo(m),600);
+ if(m.role==='host'&&m.sess&&!m.songStarted&&!m.songSent){clearTimeout(m.songWait);m.songStarted=1;streamSong(m)}}
 const snap=()=>({q:G.q,sc:G.sc,cb:G.combo,bs:G.best,hp:G.hp,p:G.p,g:G.g,m:G.m,fv:G.fv,fe:G.fe});
 function mpSend(n,r){G.q++;send({k:'n',i:n.i,r,s:snap()})}
 function adopt(s){if(s.q>G.q){G.q=s.q;G.sc=s.sc;G.combo=s.cb;G.best=s.bs;G.hp=s.hp;G.p=s.p;G.g=s.g;G.m=s.m;G.fv=s.fv;G.fe=s.fe}}
 function koNow(st,sg){if(G.kos.some(k=>k.sg===sg))return false;const t=st+.6,sw=(sg+1)*SEGL-t>=2;G.kos.push({sg,t,sw});G.hp=50;G.fv=0;G.fe=-9;G.q++;send({k:'ko',sg,t,sw,s:snap()});G.bn.push({t:sw?'ENERGY OUT · SWITCH!':'ENERGY RESTORED',st,c:sw?'#ff4d6d':'#2ee6d6'});return true}
-function curSend(x,y,f){if(!MP||!G||G.over||!S)return;const t=performance.now();if(!f&&t-(G.lc||0)<(MP.mode==='cloud'?110:50))return;G.lc=t;send({k:'c',x:+((x-ox)/(VW*S)).toFixed(4),y:+((y-oy)/(VH*S)).toFixed(4)})}
-const STX={connected:'Connected',syncing:'Syncing clocks…',sending:'Sending the song',receiving:'Downloading the song',decoding:'Preparing the audio…',loaded:'Song loaded, getting ready…',waiting:'Waiting for you to get ready',ready:'Ready ✓',playing:'Playing',results:'On the results screen',away:'Switched to another app or tab',left:'Left the match'};
-function setMy(s,p){const m=MP;if(!m||(!m.dc&&m.mode!=='cloud'))return;const k=s+'|'+(p==null?'':p);if(m.sentK===k)return;m.sentK=k;m.cur={s,p};send({k:'st',s,p:p==null?null:p})}
-function renderPS(){const m=MP;if(!m||!m.ps)return;const who=m.role==='host'?'Your friend':'The host',s=m.ps.s,p=m.ps.p,t=(STX[s]||s)+(p!=null&&(s==='sending'||s==='receiving')?' '+p+'%':'');
+function curSend(x,y,f){if(!MP||!G||G.over||G.paused||!S)return;const t=performance.now();if(!f&&t-(G.lc||0)<(viaMQ(MP)?110:50))return;G.lc=t;send({k:'c',x:+((x-ox)/(VW*S)).toFixed(4),y:+((y-oy)/(VH*S)).toFixed(4)})}
+const STX={connected:'Connected',syncing:'Syncing clocks…',sending:'Sending the song',receiving:'Downloading the song',decoding:'Preparing the audio…',loaded:'Song loaded, getting ready…',waiting:'Waiting for you to get ready',ready:'Ready ✓',playing:'Playing',dlerr:'Download failed, switching method…',choosing:'Choosing a new song…',analyzing:'Analyzing the new song',picking:'Picking the beat layer…',results:'On the results screen',away:'Switched to another app or tab',left:'Left the match'};
+function setMy(s,p){const m=MP;if(!m)return;const k=s+'|'+(p==null?'':p);if(m.sentK===k)return;m.sentK=k;m.cur={s,p};const q=p==null?null:p;if(m.sess)send({k:'st',s,p:q});else if(m.sig&&m.role==='guest')m.sig.pub(JSON.stringify({t:'st',s,p:q}))}
+function renderPS(){const m=MP;if(!m||!m.ps)return;const who=m.role==='host'?'Your friend':'The host',s=m.ps.s,p=m.ps.p,t=(STX[s]||s)+(p!=null&&(s==='sending'||s==='receiving'||s==='analyzing')?' '+p+'%':'');
  $('mpP').style.display='';$('mpPn').textContent=who;$('mpPs').textContent=t;$('mpPb').style.width=(p!=null?p:['loaded','waiting','ready','playing','results'].indexOf(s)>=0?100:s==='away'||s==='left'?0:8)+'%';$('etp').textContent=(m.role==='host'?'Your teammate':'The host')+': '+t}
-document.addEventListener('visibilitychange',()=>{const m=MP;if(!m||!(m.mode==='cloud'||(m.dc&&m.dc.readyState==='open')))return;if(document.hidden){m.back=m.cur;send({k:'st',s:'away',p:null});m.sentK='away|'}else{m.sentK='';if(m.back)setMy(m.back.s,m.back.p)}});
-let CLOUDWAIT=15000;
+document.addEventListener('visibilitychange',()=>{const m=MP;if(!m||!m.sess)return;if(document.hidden){m.back=m.cur;send({k:'st',s:'away',p:null});m.sentK='away|'}else{m.sentK='';if(m.back)setMy(m.back.s,m.back.p)}});
+let CLOUDWAIT=10000,SONGWAIT=1500;
+const spd=(done,t0,total)=>{const dt=(performance.now()-t0)/1000;if(dt<.6||done<=0)return'';const r=done/dt;return'· '+(r>=1048576?(r/1048576).toFixed(1)+' MB/s':Math.round(r/1024)+' KB/s')+(total?' · about '+Math.max(0,Math.round((total-done)/r))+' s left':'')};
+function xferDone(m){if(m.xd||!m.t0)return;m.xd=1;const dt=Math.max(.05,(performance.now()-m.t0)/1000),mb=m.got/1048576;$('mpUp').textContent='Song received: '+mb.toFixed(1)+' MB in '+dt.toFixed(1)+' s ('+(mb/dt).toFixed(1)+' MB/s)'}
 function customCloud(){try{const v=JSON.parse(localStorage.getItem('dc:cloud'));return v&&v.u&&v.k?{u:v.u.replace(/\/+$/,''),k:v.k,b:v.b||'osu-temp-music',f:!!v.f}:null}catch(e){return null}}
-function cloudIn(m,x,u){if(m.mode!=='cloud'||u!==m.cb||x.f===m.role||MP!==m)return;m.rx=performance.now();onMsg(x.d)}
-function switchCloud(m){if(MP!==m||m.role!=='host'||m.mode==='cloud'||(m.dc&&m.dc.readyState==='open'))return;
- if(!m.ansVia){mps('Waiting for your friend…');return}m.cb=m.ansVia;m.mode='cloud';m.sig.pubTo(m.cb,JSON.stringify({t:'cloud'}));cloudStart(m)}
-async function cloudStart(m){if(MP!==m)return;m.mode='cloud';m.sq=0;clearInterval(m.iv);try{m.pc.close()}catch(e){}m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1500);
- $('mpRt').textContent=customCloud()?'Connection: cloud mode (message servers, song via your temporary storage)':'Connection: cloud mode (everything goes through the public message servers)';
- if(m.role==='host'){try{const info={k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size};
-  if(customCloud()){mps('Cloud mode. Uploading the song…');setMy('sending',null);info.url=await cloudUpload(m);send(info);setMy('waiting');mps('Song uploaded. Waiting for your friend to download it…')}
-  else{mps('Cloud mode. Sending the song through the message servers…');await cloudStream(m,info)}}catch(e){mps(e.message||String(e))}}
- else{mps('Cloud mode. Waiting for the song…');setMy('syncing');m.sp=syncClock(m)}}
+function cloudIn(m,x,u){if(x.f===m.role||MP!==m)return;if(m.cb){if(u!==m.cb)return}else if(m.role==='guest')m.cb=u;else return;m.rx=performance.now();if(!m.sess)sessionStart(m);onMsg(x.d)}
+// A session starts the moment both sides can talk (through the message servers); a direct connection upgrades it later.
+function sessionStart(m){if(m.sess||MP!==m)return;m.sess=1;m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1200);if(m.connOk)m.connOk();
+ if(m.mode!=='cloud')$('mpRt').textContent='Connection: through the message servers for now (a direct connection is being set up)';
+ if(m.role==='host'){setMy('connected');hostSendSong(m)}else{setMy('syncing');m.sp=syncClock(m)}}
+function switchCloud(m){if(MP!==m||m.role!=='host'||m.mode==='cloud'||!m.cb)return;m.mode='cloud';m.sig.pubTo(m.cb,JSON.stringify({t:'cloud'}));cloudStart(m)}
+function cloudStart(m){if(MP!==m)return;m.mode='cloud';try{m.pc.close()}catch(e){}$('mpRt').textContent=customCloud()?'Connection: cloud mode (message servers, song via your temporary storage)':'Connection: cloud mode (everything goes through the public message servers)'}
+async function hostSendSong(m){const info={k:'room',fname,tempo:TEMPO,sel,diff,seed:SEED,size:SONGFILE.size};
+ try{const pre=customCloud()&&!m.noStorage?(m.upP||startUpload(m)):null;if(pre&&m.up==='uploading'){mps('Finishing the song upload…');setMy('sending',null)}const url=pre?await pre:null;
+  if(url){m.songSent=1;m.songUrl=url;info.url=url;send(info);setMy('waiting');mps('Song is ready in storage. Your friend is downloading it…');return}
+  m.songStarted=0;send(info);
+  if(m.dc&&m.dc.readyState==='open'&&m.mode!=='cloud'){m.songStarted=1;streamSong(m)}
+  else{clearTimeout(m.songWait);m.songWait=setTimeout(()=>{if(MP===m&&!m.songStarted){m.songStarted=1;mps('Sending the song through the message servers…');cloudStream(m,info)}},m.mode==='cloud'?0:SONGWAIT)}}catch(e){mps(e.message||String(e))}}
+function coopNext(){const m=MP;if(!m||m.role!=='host')return;if(!m.sess){$('warn').textContent='The connection to your friend is gone. Leave co-op and create a new room.';return}
+ stopPv();m.ready=0;m.upP=null;m.up=null;m.cpath=null;m.deleted=0;m.sentK='';m.songSent=0;m.songUrl=null;m.noStorage=0;m.songStarted=0;clearTimeout(m.songWait);m.xd=0;chatSys('You picked a new song: '+fname);
+ show('mp');$('mpt').textContent='Next song';$('mpH').style.display='';$('mpmk').style.display='none';$('mpL').style.display='none';$('mpG').style.display='none';$('mpready').style.display='none';$('mpgo').style.display='none';mps('Sending the new song…');hostSendSong(m)}
 async function cloudUpload(m){const c=customCloud();if(!c)throw new Error('Add your storage details first.');const ext=((SONGFILE.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,''))||'mp3',path=m.code+'/'+Math.random().toString(36).slice(2,10)+'.'+ext,h={apikey:c.k,Authorization:'Bearer '+c.k};
  let r;try{r=await fetch(c.u+'/storage/v1/object/'+c.b+'/'+path,{method:'POST',headers:{...h,'Content-Type':SONGFILE.type||'audio/mpeg'},body:SONGFILE})}catch(e){throw new Error('Could not reach your storage. Check the URL.')}
  if(!r.ok)throw new Error('Upload failed ('+r.status+'). Check the key, the bucket name and the bucket permissions.');m.cpath=path;
  r=await fetch(c.u+'/storage/v1/object/sign/'+c.b+'/'+path,{method:'POST',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});if(!r.ok)throw new Error('Could not create the download link ('+r.status+').');
  return c.u+'/storage/v1'+(await r.json()).signedURL}
-async function cloudDownload(m,url){const r=await fetch(url);if(!r.ok)throw new Error('Song download failed ('+r.status+').');const tot=+r.headers.get('content-length')||m.size,rd=r.body.getReader(),parts=[];let got=0,lp=-1;
- for(;;){const{value,done}=await rd.read();if(done)break;parts.push(value);got+=value.length;const pc=tot?Math.min(99,Math.round(got/tot*100)):0;if(pc!==lp){lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}}m.chunks=parts}
+async function cloudDownload(m,url){const t0=m.t0=performance.now();const r=await fetch(url);if(!r.ok)throw new Error('Song download failed ('+r.status+').');const tot=+r.headers.get('content-length')||m.size,rd=r.body.getReader(),parts=[];let got=0,lp=-1;
+ for(;;){const{value,done}=await rd.read();if(done)break;parts.push(value);got+=value.length;const pc=tot?Math.min(99,Math.round(got/tot*100)):0;if(pc!==lp){lp=pc;mps('Downloading the song… '+pc+'% '+spd(got,t0,tot));setMy('receiving',pc)}}m.chunks=parts;m.got=got;xferDone(m)}
+async function getSong(m,url){try{await cloudDownload(m,url);finishSong()}catch(e){m.songGot=0;setMy('dlerr');mps((e.message||String(e))+' Asking the host to send it another way…')}}
+function dlFallback(m){if(m.role!=='host')return;m.songSent=0;m.songUrl=null;m.noStorage=1;m.songStarted=0;chatSys('Download failed, sending the song another way…');if(m.sess)hostSendSong(m)}
+function announceSong(m){const p=m.upP||startUpload(m);if(!p)return;p.then(url=>{if(!url||MP!==m||m.songSent||m.noStorage)return;m.songSent=1;m.songUrl=url;const msg=JSON.stringify({t:'song',u:url,sz:SONGFILE.size});m.sig.pubTo(m.ansVia,msg);m.annT=setTimeout(()=>{if(MP===m&&m.sig)m.sig.pubTo(m.ansVia,msg)},3000);mps('Friend found! Their download starts now while we connect…')})}
 // Song sent in 24 KB pieces with acknowledgements, so lost or late pieces are simply sent again.
 const b64enc=u=>{let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
-async function cloudStream(m,info){const ab=new Uint8Array(await SONGFILE.arrayBuffer()),N=24576,total=Math.ceil(ab.length/N),WIN=12;info.cn=total;send(info);
- const c=m.cs={base:0,next:0,dup:0,t:Date.now()};
- const pump=()=>{if(MP!==m||m.mode!=='cloud')return;while(c.next<total&&c.next-c.base<WIN){const i=c.next++;send({k:'sc',i,d:b64enc(ab.subarray(i*N,(i+1)*N))})}
-  if(!c.done){const pc=Math.round(c.base/total*100);setMy('sending',pc);mps('Sending the song… '+pc+'%')}
-  if(c.base>=total&&!c.done){c.done=1;clearInterval(c.w);send({k:'songend'});setMy('waiting');mps('Song sent. Waiting for your friend to get ready…')}};
- m.ack=i=>{if(i>c.base){c.base=i;c.dup=0;c.t=Date.now()}else if(i===c.base&&c.next>c.base&&++c.dup>=2){c.next=c.base;c.dup=0}pump()};
- c.w=setInterval(()=>{if(Date.now()-c.t>6000&&c.next>c.base&&!c.done){c.next=c.base;c.t=Date.now();pump()}},2000);pump()}
-function cloudChunk(m,p){if(p.i===m.exp){const r=atob(p.d),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);m.chunks.push(u);m.got+=u.length;m.exp++;
-  const pc=Math.min(99,Math.round(m.exp/m.cn*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'%');setMy('receiving',pc)}if(m.exp%6===0||m.exp===m.cn)send({k:'ak',i:m.exp})}
- else send({k:'ak',i:m.exp})}
-function cloudDelete(m){if(m.role!=='host'||!m.cpath)return;const c=customCloud();if(!c)return;const p=m.cpath;m.cpath=null;try{fetch(c.u+'/storage/v1/object/'+c.b+'/'+p,{method:'DELETE',headers:{apikey:c.k,Authorization:'Bearer '+c.k},keepalive:true}).catch(()=>{})}catch(e){}}
-function finishSong(){guard(async()=>{mps('Preparing the song…');setMy('decoding');await MP.sp;buf=await AC.decodeAudioData(await new Blob(MP.chunks).arrayBuffer());MP.chunks=[];$('mpready').style.display='';setMy('loaded');mps('Song loaded. Tap "I\'m ready".')})()}
+async function cloudStream(m,info){const ab=new Uint8Array(await SONGFILE.arrayBuffer()),N=32768,total=Math.ceil(ab.length/N);info.cn=total;send(info);
+ const c=m.cs={acked:new Uint8Array(total),cum:0,next:0,win:8,ssth:48,sent:new Float64Array(total),flight:0,t0:performance.now(),done:0};
+ const out=i=>{c.sent[i]=performance.now();send({k:'sc',i,d:b64enc(ab.subarray(i*N,(i+1)*N))})};
+ const pump=()=>{if(MP!==m||c.done)return;const now=performance.now();
+  for(let i=c.cum;i<c.next;i++)if(!c.acked[i]&&now-c.sent[i]>3500){out(i);c.ssth=Math.max(4,c.win>>1);c.win=c.ssth}
+  while(c.next<total&&c.flight<c.win){c.flight++;out(c.next++)}
+  if(c.cum>=total){c.done=1;clearInterval(c.w);send({k:'songend'});setMy('waiting');mps('Song sent in '+((performance.now()-c.t0)/1000).toFixed(1)+' s. Waiting for your friend to get ready…');return}
+  const pc=Math.round(c.cum/total*100);setMy('sending',pc);mps('Sending the song… '+pc+'% '+spd(c.cum*N,c.t0,ab.length))};
+ m.ack=(i,sk)=>{if(c.done)return;let n=0;for(let k=c.cum;k<i&&k<total;k++)if(!c.acked[k]){c.acked[k]=1;n++}for(const k of sk||[])if(k>=0&&k<total&&!c.acked[k]){c.acked[k]=1;n++}
+  while(c.cum<total&&c.acked[c.cum])c.cum++;c.flight=Math.max(0,c.flight-n);if(n)c.win=Math.min(96,c.win+(c.win<c.ssth?n:Math.ceil(n/c.win)));pump()};
+ c.w=setInterval(pump,1000);pump()}
+function cloudAck(m){const sk=[];for(let i=m.cum;i<m.cn&&sk.length<48;i++)if(m.rcv[i])sk.push(i);m.lastAck=performance.now();send({k:'ak',i:m.cum,sk})}
+function cloudChunk(m,p){if(!m.rcv){m.rcv=new Array(m.cn);m.have=0;m.cum=0;m.ackN=0;m.t0=performance.now();m.ackT=setInterval(()=>{if(MP!==m||m.have>=m.cn){clearInterval(m.ackT);return}if(m.have>0)cloudAck(m)},600)}
+ if(p.i>=m.cn||p.i<0)return;if(m.rcv[p.i]){cloudAck(m);return}
+ const r=atob(p.d),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);m.rcv[p.i]=u;m.have++;m.got+=u.length;while(m.cum<m.cn&&m.rcv[m.cum])m.cum++;
+ const pc=Math.min(99,Math.round(m.have/m.cn*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'% '+spd(m.got,m.t0,m.size));setMy('receiving',pc)}
+ if(m.have>=m.cn){clearInterval(m.ackT);m.chunks=m.rcv;cloudAck(m);xferDone(m)}else if(++m.ackN%4===0||(p.i>m.cum&&performance.now()-(m.lastAck||0)>150))cloudAck(m)}
+function startUpload(m){if(m.upP)return m.upP;if(!customCloud()||m.role!=='host')return null;m.up='uploading';$('mpUp').textContent='Uploading your song to storage in the background…';
+ m.upP=cloudUpload(m).then(u=>{m.up='done';if(m.deleted){cloudDelete(m);return null}if(MP===m)$('mpUp').textContent='✓ Song is ready in storage';return u},e=>{m.up='error';if(MP===m)$('mpUp').textContent='Storage upload failed ('+(e.message||e)+'). The song will be sent another way.';return null});return m.upP}
+function cloudDelete(m){if(m.role!=='host')return;if(!m.cpath){if(m.up==='uploading')m.deleted=1;return}const c=customCloud();if(!c)return;const p=m.cpath;m.cpath=null;if(MP===m||!MP)$('mpUp').textContent='Song deleted from storage.';try{fetch(c.u+'/storage/v1/object/'+c.b+'/'+p,{method:'DELETE',headers:{apikey:c.k,Authorization:'Bearer '+c.k},keepalive:true}).catch(()=>{})}catch(e){}}
+function finishSong(){guard(async()=>{const m=MP;mps('Preparing the song…');setMy('decoding');await m.sp;buf=await AC.decodeAudioData(await new Blob(m.chunks).arrayBuffer());m.chunks=[];m.rcv=null;
+ if(!(m.mode==='cloud'||(m.dc&&m.dc.readyState==='open')))mps('Song downloaded. Waiting for the connection…');await m.connP;$('mpready').style.display='';setMy('loaded');mps('Song loaded. Tap "I\'m ready".')})()}
 function onMsg(p){if(!MP)return;switch(p.k){
- case'st':MP.ps={s:p.s,p:p.p};renderPS();if(MP.role==='host'&&MP.cpath&&(p.s==='loaded'||p.s==='ready'))cloudDelete(MP);break;
- case'room':if(MP.role!=='guest')break;MP.size=p.size;MP.chunks=[];MP.got=0;fname=p.fname;TEMPO=p.tempo;SEED=p.seed;sel=p.sel;diff=p.diff;MP.cn=p.cn;MP.exp=0;MP.lp=-1;setMy('receiving',0);if(p.url)guard(async()=>{await cloudDownload(MP,p.url);finishSong()})();break;
+ case'st':MP.ps={s:p.s,p:p.p};renderPS();if(MP.role==='host'&&MP.cpath&&(p.s==='loaded'||p.s==='ready'))cloudDelete(MP);if(MP.role==='host'&&p.s==='dlerr')dlFallback(MP);if(p.s==='choosing'){chatSys('The host is choosing a new song…');toast('🎵 The host is choosing a new song…')}break;
+ case'room':if(MP.role!=='guest')break;if(G&&G.over){show('mp');$('mpG').style.display='none';$('mpH').style.display='none';$('mpready').style.display='none';$('mpgo').style.display='none';mps('The host picked a new song. Downloading…')}if(!p.cn)chatSys('Song from the host: '+p.fname);fname=p.fname;TEMPO=p.tempo;SEED=p.seed;sel=p.sel;diff=p.diff;
+  if(p.url&&MP.songGot===p.url)break;
+  MP.songGot=p.url||0;MP.size=p.size;MP.chunks=[];MP.got=0;MP.cn=p.cn;MP.rcv=null;MP.have=0;MP.cum=0;MP.xd=0;MP.t0=0;MP.lp=-1;clearInterval(MP.ackT);setMy('receiving',0);if(p.url)getSong(MP,p.url);break;
  case'sc':if(MP.role==='guest'&&MP.cn)cloudChunk(MP,p);break;
- case'ak':if(MP.role==='host'&&MP.ack)MP.ack(p.i);break;
- case'songend':if(MP.role!=='guest')break;finishSong();break;
+ case'ak':if(MP.role==='host'&&MP.ack)MP.ack(p.i,p.sk);break;
+ case'songend':if(MP.role!=='guest')break;xferDone(MP);finishSong();break;
  case'ping':if(MP.role==='host')send({k:'pong',t:p.t,th:Date.now()});break;
  case'pong':if(MP.pg)MP.pg(p.t,p.th);break;
  case'ready':if(MP.role==='host'){MP.ready=1;$('mpgo').style.display='';mps('Your friend is ready. Start when you are.')}break;
@@ -450,14 +510,17 @@ function onMsg(p){if(!MP)return;switch(p.k){
   break}
  case'c':if(G&&!G.over){const c=G.pc;c.tx=p.x;c.ty=p.y;c.t=performance.now();if(c.x===undefined){c.x=p.x;c.y=p.y}}break;
  case'ko':if(!G||G.over)break;if(!G.kos.some(k=>k.sg===p.sg))G.kos.push({sg:p.sg,t:p.t,sw:p.sw});adopt(p.s);G.fv=0;G.fe=-9;if(p.sw){G.bn.push({t:'TAKE OVER!',st:AC.currentTime-G.T0-G.off,c:'#ff4d6d'});G.rp=AC.currentTime-G.T0-G.off}break;
- case'end':if(G&&!G.over)fin('Match over');break;
+ case'end':if(G&&!G.over)fin(p.why||'Match over');break;
+ case'pz':if(!MP.pz)MP.pz={me:0,them:0};MP.pz.them=p.p?1:0;chatSys(p.p?'Your partner paused the game.':'Your partner is ready.');pzUpdate();break;
+ case'cm':chatIn(p);break;
+ case'cr':chatRx(p);break;
  case'leave':MP.ps={s:'left',p:null};renderPS();if(G&&!G.over)fin('Your partner left');if(G&&G.over){$('etm').textContent='Your teammate left the room.';$('again').style.display='none'}else if(MP.role==='host'){mps('Your friend disconnected. Make a new invite code to try again.');$('mpgo').style.display='none'}else mps('The host disconnected.');break}}
 function startHost(){if(!MP||!MP.ready)return;notes=build();place();MP.startAt=Date.now()+4500;MP.notes=notes;
  send({k:'start',at:MP.startAt,notes:notes.map(n=>[+n.t.toFixed(3),+n.s.toFixed(2),n.big?1:0,n.num,n.grp,n.nx,n.ny])});go()}
 function modeVis(){document.querySelectorAll('.modes').forEach(e=>e.style.display=MP?'none':'')}
-function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();clearInterval(m.iv);clearInterval(m.hb);clearTimeout(m.cloudT);if(m.cs)clearInterval(m.cs.w);cloudDelete(m);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
+function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();chatClear();pzReset();clearInterval(m.iv);clearInterval(m.hb);clearTimeout(m.cloudT);if(m.cs)clearInterval(m.cs.w);cloudDelete(m);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
 function mpLeave(){if(MP)send({k:'leave'});mpEnd()}
-$('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',()=>{if(MP)send({k:'leave'})});
+$('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',()=>{if(MP){send({k:'leave'});cloudDelete(MP)}});
 $('mpready').onclick=()=>{AC.resume();send({k:'ready'});setMy('ready');$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
 $('mpback').onclick=()=>{const gs=MP&&MP.role==='guest';mpLeave();show(MPM==='host'&&!gs?'pick':'up')};
 $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
@@ -476,8 +539,77 @@ async function testCloud(){const out=$('ctr'),c=customCloud();if(!c){out.textCon
   L.push(L.some(x=>x[0]==='✗')?'\nFix the items marked ✗, then test again.':'\nCloud mode is ready.')}
  catch(e){L.push('✗ Could not reach '+c.u+'. Check the URL (it looks like https://abcd1234.supabase.co) and your internet connection.')}show()}
 $('cts').onclick=testCloud;
+// ===== practice mode + animated tutorial =====
+function startPractice(){stopPv();AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();const sr=AC.sampleRate,dur=44,per=60/92,b=AC.createBuffer(1,Math.floor(sr*dur),sr),d=b.getChannelData(0);
+ for(let k=0;k*per<dur-.5;k++){const s0=Math.floor(k*per*sr);for(let i=0;i<sr*.25&&s0+i<d.length;i++){const u2=i/sr;d[s0+i]+=.8*Math.sin(6.283*(55+80*Math.exp(-u2*35))*u2)*Math.exp(-u2*18)}
+  const h0=Math.floor((k*per+per/2)*sr);let pv=0;for(let i=0;i<sr*.06&&h0+i<d.length;i++){const n=Math.random()*2-1;d[h0+i]+=.12*(n-pv)*Math.exp(-i/sr*90);pv=n}}
+ buf=b;fname='Practice';TEMPO=92;SEED=4242;sel='beat';diff=.55;const bt=[];for(let k=0;k<60;k++){const t=2.6+k*per;if(t>dur-2)break;bt.push({t,s:k%4===0?.95:.5})}
+ bands={beat:bt,kick:bt,snare:[],hat:[],all:bt};PR=true;go()}
+const TVC=[[0,'The circles','Circles appear in time with the music. A ring shrinks toward each one.'],[9,'Timing','Click or tap the circle exactly when the ring touches it. Follow the numbers 1, 2, 3, 4. The bright circle is always next.'],[20,'Combos and energy','Perfect and Good hits build your combo. A miss breaks it and drains the blue energy bar.'],[31,'Fever and gold circles','Hit streaks fill the purple meter. When it is full, FEVER doubles your score. Big gold circles are worth double.'],[41,'Co-op','Two players take turns, 30 seconds each, with one shared score and energy. If your partner runs out of energy, you take over. Pausing is shared, and you can chat.'],[53,'Tips','Auto assist forgives near misses. If rings close too fast, raise the Approach slider. Headphones help with timing.']],TVEND=62;
+const TVN=[[3,400,225,1,'P'],[6,250,200,1,'P'],[8.4,560,250,2,'G'],[12,200,150,1,'P'],[13.2,380,260,2,'P'],[14.4,560,160,3,'P'],[15.6,620,300,4,'P'],[17.2,300,320,1,'P'],[18.4,160,220,2,'P'],
+ [22.4,240,170,1,'P'],[23.6,420,280,2,'P'],[24.8,600,180,3,'G'],[26,500,320,4,'M'],[27.2,300,300,1,'P'],[28.4,180,160,2,'P'],[29.6,400,220,3,'P'],
+ [32.2,200,200,1,'P'],[33.2,340,300,2,'P'],[34.2,480,160,3,'P'],[35.2,620,260,4,'P'],[36.2,420,340,1,'P'],[37.2,280,180,2,'P'],[38.2,460,230,3,'P'],[39.6,400,225,1,'P',1],
+ [43,260,180,1,'P'],[44.4,520,240,2,'P'],[45.8,360,320,3,'P'],[47.2,600,170,4,'P'],[48.6,300,230,1,'P'],[50,520,300,2,'P'],[51.4,400,180,3,'P'],
+ [55,300,200,1,'P'],[57,520,250,2,'P'],[59,400,170,3,'P'],[60.5,300,300,4,'P']].map(a=>({t:a[0],x:a[1],y:a[2],n:a[3],r:a[4],big:a[5]||0}));
+const TV={t:0,play:true,last:0,run:0,ci:-1};
+function tvCirc(c,x,y,r,col,n,ap,al,hi){c.save();c.globalAlpha=al;c.shadowColor=col;c.shadowBlur=hi?28:10;const g=c.createRadialGradient(x-r*.3,y-r*.35,r*.1,x,y,r);g.addColorStop(0,col+'cc');g.addColorStop(.55,'#1d0a2b');g.addColorStop(1,col+'88');c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.3);c.fill();c.strokeStyle=hi?'#fff':col;c.lineWidth=hi?5:3;c.stroke();c.shadowBlur=0;
+ c.fillStyle='#fff';c.font='800 '+Math.round(r*.85)+'px Outfit,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(n,x,y+2);c.textBaseline='alphabetic';c.strokeStyle=hi?'#fff':col;c.lineWidth=hi?4:3;c.beginPath();c.arc(x,y,r*ap,0,6.3);c.stroke();c.restore()}
+function tvStats(t){let cb=0,hp=100,fv=0,sc=0,fe=-9;for(const n of TVN){if(n.t>t)break;if(n.r==='M'){cb=0;hp-=14;fv*=.4;fe=-9}else{cb++;hp=Math.min(100,hp+2);fv=Math.min(1,fv+(n.r==='P'?.15:.08));if(fv>=1&&n.t>fe){fe=n.t+6;fv=0}sc+=(n.r==='P'?300:150)*(n.big?2:1)*(n.t<fe?2:1)}}return{cb,hp,fv,sc,fe}}
+function tvDraw(c,t){const k=(c.canvas&&+c.canvas.width)?+c.canvas.width/800:1;c.setTransform(k,0,0,k,0,0);const LD=1.7,rg=c.createRadialGradient(400,200,0,400,200,520);rg.addColorStop(0,'#3a0f4a');rg.addColorStop(1,'#0d0415');c.fillStyle=rg;c.fillRect(0,0,800,450);
+ const bp=Math.exp(-((t*1.5)%1)*5);c.strokeStyle='rgba(255,46,147,'+(.2*bp)+')';c.lineWidth=5;c.beginPath();c.arc(400,225,60+(1-bp)*220,0,6.3);c.stroke();
+ const part=t>=47&&t<53,nx=TVN.find(n=>n.t>=t-.02),pv=TVN.filter(n=>n.t<t-.02).pop(),dim=part?.3:1;
+ for(const n of TVN.filter(n=>t>=n.t-LD&&t<=n.t+.5).reverse()){const dt=n.t-t,col=n.big?'#ffc83d':C3[(n.n-1)%3],r=n.big?56:44;
+  if(dt>=0)tvCirc(c,n.x,n.y,r,col,n.n,1+2*(dt/LD),Math.min(1,(LD-dt)/.35)*(n===nx?1:.6)*dim,n===nx&&!part);
+  else{const q=-dt/.5;c.globalAlpha=(1-q)*dim;c.strokeStyle=n.r==='M'?'#a58bbd':'#fff';c.lineWidth=4;c.beginPath();c.arc(n.x,n.y,r*(1+q*.7),0,6.3);c.stroke();c.fillStyle=n.r==='P'?'#ffc83d':n.r==='G'?'#2ee6d6':'#a58bbd';c.font='800 22px Outfit,sans-serif';c.textAlign='center';c.fillText(n.r==='P'?'PERFECT':n.r==='G'?'GOOD':'MISS',n.x,n.y-r-14-q*18);c.globalAlpha=1}}
+ let cx2=80,cy2=380;if(nx){const a=pv?Math.max(pv.t+.15,nx.t-.8):Math.max(0,nx.t-1.4),b2=nx.t-.04,q=Math.max(0,Math.min(1,(t-a)/Math.max(.05,b2-a))),e=q*q*(3-2*q),sx=pv?pv.x:80,sy=pv?pv.y:380;cx2=sx+(nx.x-sx)*e;cy2=sy+(nx.y-sy)*e}
+ const cur=(x,y,col)=>{c.strokeStyle=col;c.lineWidth=3;c.beginPath();c.arc(x,y,11,0,6.3);c.stroke();c.fillStyle=col;c.beginPath();c.arc(x,y,3,0,6.3);c.fill()};
+ if(part){const f=Math.max(0,Math.min(1,(t-47)/1.2));cur(cx2*f+400*(1-f),cy2*f+300*(1-f),'#ffb347');c.fillStyle='#ffb347';c.font='700 12px Outfit,sans-serif';c.textAlign='left';c.fillText('FRIEND',cx2+16,cy2+4)}else cur(cx2,cy2,'#fff');
+ const near=TVN.find(n=>Math.abs(n.t-t)<.14);if(near&&!part){const q=1-Math.abs(near.t-t)/.14;c.strokeStyle='rgba(255,255,255,'+q*.8+')';c.lineWidth=3;c.beginPath();c.arc(cx2,cy2,11+(1-q)*26,0,6.3);c.stroke()}
+ if(t>=20&&t<53||t>=53){const s=tvStats(t);c.textAlign='left';c.fillStyle='#f3ead8';c.font='800 26px Outfit,sans-serif';c.fillText(String(Math.round(s.sc)).padStart(6,'0'),16,34);
+  c.fillStyle='#2a1038';c.fillRect(560,16,224,12);c.fillStyle=s.hp<30?'#ff4d4d':'#2ee6d6';c.fillRect(560,16,224*Math.max(0,s.hp)/100,12);c.fillStyle='#2a1038';c.fillRect(560,34,224,7);c.fillStyle=t<s.fe?'#ffc83d':'#b46bff';c.fillRect(560,34,224*(t<s.fe?(s.fe-t)/6:s.fv),7);
+  if(s.cb>1){c.fillStyle='#ffc83d';c.font='800 34px Outfit,sans-serif';c.fillText(s.cb+'x',16,430)}if(t<s.fe){c.fillStyle='#ffc83d';c.font='800 14px Outfit,sans-serif';c.textAlign='right';c.fillText('FEVER x2',784,58)}
+  if(t>=20&&t<31){c.fillStyle='#a58bbd';c.font='600 13px Outfit,sans-serif';c.textAlign='right';c.fillText('energy',548,27);c.fillText('fever meter',548,41)}}
+ if(t>=41&&t<53){const me=t<47;c.textAlign='center';c.font='800 24px Outfit,sans-serif';c.fillStyle=me?'#ffc83d':'#2ee6d6';c.fillText(me?'YOUR TURN':"PARTNER'S TURN",400,34);
+  if(me){const g=c.createRadialGradient(400,225,200,400,225,460);g.addColorStop(0,'rgba(255,200,61,0)');g.addColorStop(1,'rgba(255,200,61,.2)');c.fillStyle=g;c.fillRect(0,0,800,450)}
+  if(t>=50&&t<52.6){c.fillStyle='rgba(20,6,31,.85)';c.fillRect(250,150,300,130);c.fillStyle='#ffc83d';c.font='400 34px Monoton,Impact,sans-serif';c.fillText('READY 1/2',400,205);c.fillStyle='#f3ead8';c.font='600 15px Outfit,sans-serif';c.fillText('Partner paused. Game resumes at 2/2.',400,245)}
+  if(t>=44&&t<47.4){c.fillStyle='#33123f';c.fillRect(560,380,224,36);c.fillStyle='#f3ead8';c.font='600 14px Outfit,sans-serif';c.textAlign='left';c.fillText('Friend: nice combo! 🔥',570,403)}}
+ if(t>=TVEND-.2){c.textAlign='center';c.fillStyle='#ffc83d';c.font='800 30px Outfit,sans-serif';c.fillText('Ready? Press "Try it yourself"',400,225)}}
+function tvChap(){const i=TVC.reduce((a,c,j)=>TV.t>=c[0]?j:a,0);if(i!==TV.ci){TV.ci=i;$('tvcap').textContent=TVC[i][2];document.querySelectorAll('#tvch button').forEach((b,j)=>b.classList.toggle('on',j===i))}}
+function tvLoop(ts){if(!$('tut').classList.contains('on')){TV.run=0;return}requestAnimationFrame(tvLoop);const dt=Math.min(.1,(ts-TV.last)/1000||0);TV.last=ts;
+ if(TV.play){const a=TV.t;TV.t+=dt;for(const n of TVN)if(n.t>a&&n.t<=TV.t&&AC&&$('hs').checked)n.r==='M'?thud():ding();if(TV.t>=TVEND){TV.t=TVEND;TV.play=false;$('tvp').textContent='Replay'}}
+ tvChap();tvDraw($('tvc').getContext('2d'),TV.t)}
+function tvOpen(){AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();show('tut');TV.t=0;TV.play=true;TV.ci=-1;$('tvp').textContent='Pause';TV.last=performance.now();if(!TV.run){TV.run=1;requestAnimationFrame(tvLoop)}}
+$('tvch').innerHTML=TVC.map((c,i)=>'<button class="alt" data-i="'+i+'">'+(i+1)+'. '+c[1]+'</button>').join('');
+document.querySelectorAll('#tvch button').forEach(b=>b.onclick=()=>{TV.t=TVC[+b.dataset.i][0];TV.play=true;TV.ci=-1;$('tvp').textContent='Pause'});
+$('tutb').onclick=tvOpen;$('tvback').onclick=()=>show('up');$('tvtry').onclick=startPractice;
+$('tvp').onclick=()=>{if(TV.t>=TVEND){TV.t=0;TV.play=true;TV.ci=-1;$('tvp').textContent='Pause'}else{TV.play=!TV.play;$('tvp').textContent=TV.play?'Pause':'Play'}};
+$('tvr').onclick=()=>{TV.t=0;TV.play=true;TV.ci=-1;$('tvp').textContent='Pause'};
+// ===== co-op chat: lives only in memory, never saved anywhere, and is wiped when co-op ends =====
+const CHAT={list:[],seq:0,last:0,vis:false},EMO=['👍','😂','❤️','🔥','😮'];
+const myTag=()=>MP&&MP.role==='host'?'host':'guest',otherTag=()=>myTag()==='host'?'guest':'host',whoName=r=>r===myTag()?'You':r==='host'?'Host':'Friend';
+function chatPlace(n){const mh=$('mph');if(mh)mh.style.display=MP?'none':'';const c=$('chat');if(!MP){c.style.display='none';CHAT.vis=false;return}const id={mp:'cm_mp',end:'cm_end',pz:'cm_pz'}[n];if(id){$(id).appendChild(c);c.style.display='block';CHAT.vis=true;chatRender()}else{c.style.display='none';CHAT.vis=false}}
+function chatRender(){const l=$('chl');l.innerHTML='';for(const m of CHAT.list){const d=document.createElement('div');
+  if(m.sys){d.className='sys';d.textContent=m.t;l.appendChild(d);continue}
+  d.className='cmg'+(m.from===myTag()?' me':'');const nm=document.createElement('div');nm.className='nm';nm.textContent=whoName(m.from);d.appendChild(nm);
+  const b=document.createElement('div');b.className='cmb';b.textContent=m.t;d.appendChild(b);const r=document.createElement('div');r.className='cmr';
+  for(const e of EMO){const a=m.rx[e]||[];if(a.length){const x=document.createElement('button');x.type='button';x.textContent=e+' '+a.length;x.className=a.includes(myTag())?'on':'';x.onclick=()=>chatReact(m,e);r.appendChild(x)}}
+  const p=document.createElement('button');p.type='button';p.textContent=m.pk?'✕':'😊';p.onclick=()=>{m.pk=!m.pk;chatRender()};r.appendChild(p);
+  if(m.pk)for(const e of EMO){const x=document.createElement('button');x.type='button';x.textContent=e;x.onclick=()=>{m.pk=false;chatReact(m,e)};r.appendChild(x)}
+  d.appendChild(r);l.appendChild(d)}l.scrollTop=l.scrollHeight}
+function chatPush(m){CHAT.list.push(m);if(CHAT.list.length>100)CHAT.list.shift();if(CHAT.vis)chatRender()}
+function chatSys(t){if(MP)chatPush({sys:1,t})}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),3500)}
+function chatIn(p){const t=String(p.t||'').slice(0,200);if(!t)return;chatPush({id:String(p.id||''),from:otherTag(),t,rx:{}});if(!CHAT.vis)toast('💬 '+whoName(otherTag())+': '+t)}
+function chatRx(p){const m=CHAT.list.find(x=>x.id===p.id);if(!m||EMO.indexOf(p.e)<0)return;const o=otherTag(),a=m.rx[p.e]||(m.rx[p.e]=[]);const i=a.indexOf(o);if(p.on&&i<0)a.push(o);else if(!p.on&&i>=0)a.splice(i,1);if(!a.length)delete m.rx[p.e];if(CHAT.vis)chatRender()}
+function chatReact(m,e){const me=myTag(),a=m.rx[e]||(m.rx[e]=[]),i=a.indexOf(me),on=i<0;if(on)a.push(me);else a.splice(i,1);if(!a.length)delete m.rx[e];chatRender();send({k:'cr',id:m.id,e,on:on?1:0})}
+function chatSend(){const i=$('chi'),t=String(i.value||'').trim().slice(0,200);if(!t||!MP||Date.now()-CHAT.last<350)return;CHAT.last=Date.now();const m={id:myTag()+'-'+(++CHAT.seq),from:myTag(),t,rx:{}};chatPush(m);if(!CHAT.vis)chatRender();send({k:'cm',id:m.id,t});i.value=''}
+function chatClear(){CHAT.list=[];CHAT.seq=0;CHAT.vis=false;try{$('chl').innerHTML='';$('chat').style.display='none'}catch(e){}}
+$('chs').onclick=chatSend;$('chi').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();chatSend()}if(e.key!=='Escape')e.stopPropagation()};
+$('pzend').onclick=()=>{if(MP&&MP.role==='host'&&G&&!G.over){send({k:'end',why:'The host ended the match'});fin('You ended the match')}};
+$('nwm').onclick=()=>{if(!MP||MP.role!=='host')return;setMy('choosing');chatSys('You are choosing a new song…');$('f2').click()};
+$('f2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)analyze(f);else setMy('results')};$('f2').oncancel=()=>setMy('results');
 // ===== version, invite links =====
-const VERSION='2.6',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+const VERSION='3.0',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
 const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}
