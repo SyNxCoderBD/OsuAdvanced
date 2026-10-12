@@ -116,7 +116,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <div id="mpG" style="display:none"><label for="rc">Room code</label><input id="rc" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="X7KQ2M"><div class="go"><button id="jn">Join room</button></div></div>
  <div id="mpP" style="display:none"><div class="pl"><b id="mpPn">Partner</b><span id="mpPs"></span></div><div class="trk"><div id="mpPb"></div></div></div>
  <p id="mps"></p><small id="mpUp" style="display:block;color:var(--mut);margin-bottom:4px"></small><small id="mpRt" style="display:block;color:var(--mut);margin-bottom:8px"></small>
- <details id="mpAdv" style="margin:6px 0 10px;color:var(--mut)"><summary style="cursor:pointer">Connection helper (only if you cannot connect)</summary><p style="font-size:13px;margin:8px 0">The game tries direct, then free public relays, then cloud mode automatically. Nothing here is required.</p><label for="tu">Relay address (turn:… or turns:…)</label><input id="tu" autocomplete="off" placeholder="turn:relay.example.com:443"><label for="tn">Username</label><input id="tn" autocomplete="off"><label for="tc">Password</label><input id="tc" type="password" autocomplete="off"><p style="font-size:13px;margin:14px 0 6px"><b>Cloud mode</b> already works with no setup: when a direct connection is impossible, the game and the song travel through the public message servers. <b>Optional (host only):</b> add your own Supabase storage so big songs go through temporary storage instead (deleted as soon as your friend has it). The key stays in this browser and is never sent to your friend.</p><label for="cu">Supabase URL</label><input id="cu" autocomplete="off" placeholder="https://your-project.supabase.co"><label for="ck">Supabase publishable key</label><input id="ck" type="password" autocomplete="off"><label for="cb">Storage bucket</label><input id="cb" autocomplete="off" placeholder="osu-temp-music"><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input id="cf" type="checkbox" style="width:auto"> Always use cloud mode (skip the direct connection)</label><button id="cts" class="alt" type="button" style="margin-top:10px">Test storage setup</button><p id="ctr" style="font-size:13px;margin:8px 0;white-space:pre-line"></p><p style="font-size:12px;margin:4px 0">Needs these permissions for the anon role on the bucket: insert, select and delete.</p></details>
+ <details id="mpAdv" style="margin:6px 0 10px;color:var(--mut)"><summary style="cursor:pointer">Connection helper (only if you cannot connect)</summary><p style="font-size:13px;margin:8px 0">The game tries direct, then free public relays, then cloud mode automatically. Nothing here is required.</p><label for="tu">Relay address (turn:… or turns:…)</label><input id="tu" autocomplete="off" placeholder="turn:relay.example.com:443"><label for="tn">Username</label><input id="tn" autocomplete="off"><label for="tc">Password</label><input id="tc" type="password" autocomplete="off"><p style="font-size:13px;margin:14px 0 6px"><b>Cloud mode</b> already works with no setup: when a direct connection is impossible, the game and the song travel through the public message servers. <b>Optional (host only):</b> add your own Supabase storage so big songs go through temporary storage instead (deleted as soon as your friend has it). The key stays in this browser and is never sent to your friend.</p><label for="cu">Supabase URL</label><input id="cu" autocomplete="off" placeholder="https://your-project.supabase.co"><label for="ck">Supabase publishable key</label><input id="ck" type="password" autocomplete="off"><label for="cb">Storage bucket</label><input id="cb" autocomplete="off" placeholder="osu-temp-music"><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input id="cf" type="checkbox" style="width:auto"> Always use cloud mode (skip the direct connection)</label><button id="cts" class="alt" type="button" style="margin-top:10px">Test storage setup</button><button id="cuse" class="alt" type="button" style="margin:10px 0 0 8px">Use storage for this song</button><p id="ctr" style="font-size:13px;margin:8px 0;white-space:pre-line"></p><p style="font-size:12px;margin:4px 0">Needs these permissions for the anon role on the bucket: insert, select and delete.</p></details>
  <div class="go"><button id="mpready" style="display:none">I'm ready</button><button id="mpgo" style="display:none">Start the match</button><button id="mpback" class="alt">Back</button></div>
  <div id="cm_mp"></div>
 </section>
@@ -277,7 +277,7 @@ function loop(){requestAnimationFrame(loop);
  if(G&&!G.over&&!G.paused)step()}
 loop();
 function step(){const st=AC.currentTime-G.T0-G.off;
- if(MP&&MP.rx&&performance.now()-MP.rx>15000){fin('Your partner disconnected');$('etm').textContent='Your teammate disconnected.';$('again').style.display='none';return}
+ if(MP&&MP.rx&&performance.now()-MP.rx>(MP.ps&&MP.ps.s==='away'?90000:15000)){fin('Your partner disconnected');$('etm').textContent='Your teammate disconnected.';$('again').style.display='none';return}
  if(MP){const sg=Math.floor(Math.max(0,st)/SEGL);if(st>-1&&sg!==G.sg){G.sg=sg;const me=actor(Math.max(st,0))===MP.me;G.bn.push({t:me?'YOUR TURN':"PARTNER'S TURN",st:Math.max(st,0),c:me?'#ffc83d':'#2ee6d6'});if(me)G.rp=Math.max(st,0)}}
  if(apt&&!MP){autoMove(st);if(aplay){const n=notes[G.n];if(n&&!n.done&&st>=n.t+((G.n*37%11)-5)*.006+(G.n%7==6?.09:0)){G.auto=1;hit(G.mx,G.my)}}}
  for(let i=G.n;i<notes.length&&notes[i].t<st-.18;i++){const n=notes[i];if(!n.done){if(!MP||own(n)){n.done=2;n.mt=st;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;thud();fxp('MISS',n,st,'#a58bbd');if(MP){let over=false;if(G.hp<=0)over=!koNow(st,Math.floor(n.t/SEGL));mpSend(n,'M');if(over)return fin('Out of energy')}}else if(st>n.t+.6){n.done=2;n.mt=st;n.wm=1;G.m++;G.combo=0;G.hp-=7;G.fv*=.4;G.fe=-9;fxp('MISS',n,st,'#a58bbd');if(G.hp<=0&&!koNow(st,Math.floor(n.t/SEGL)))return fin('Out of energy')}}}
@@ -366,7 +366,7 @@ document.querySelectorAll('.modes').forEach(e=>{e.innerHTML='<button class="alt 
 document.addEventListener('click',e=>{const t=e.target;if(t.classList.contains('mt')){setApt(!apt);t.blur()}else if(t.classList.contains('mp')){setAplay(!aplay);t.blur()}});
 
 // ===== Co-op: direct peer-to-peer (WebRTC). No server, no accounts, no keys. =====
-const mps=t=>$('mps').textContent=t,ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}]};
+const mps=t=>$('mps').textContent=t,ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
 function customTurn(){try{const v=JSON.parse(localStorage.getItem('dc:turn'));return v&&v.u?v:null}catch(e){return null}}
 function iceCfg(){const c={iceServers:ICE.iceServers.slice()};if(ICE.iceTransportPolicy)c.iceTransportPolicy=ICE.iceTransportPolicy;const t=customTurn();if(t)c.iceServers.push({urls:t.u,username:t.n||undefined,credential:t.c||undefined});return c}
 const b64u=u=>{let t='';for(let i=0;i<u.length;i++)t+=String.fromCharCode(u[i]);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
@@ -374,7 +374,11 @@ const unb64=t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';
 const pipe=async(u,S)=>new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new S('deflate-raw'))).arrayBuffer());
 async function pack(d){const u=new TextEncoder().encode(JSON.stringify({t:d.type,s:d.sdp}));return typeof CompressionStream!=='undefined'?'z'+b64u(await pipe(u,CompressionStream)):'r'+b64u(u)}
 async function unpack(c){try{c=c.replace(/\s+/g,'');const u=unb64(c.slice(1)),o=JSON.parse(new TextDecoder().decode(c[0]==='z'?await pipe(u,DecompressionStream):u));return{type:o.t,sdp:o.s}}catch(e){throw new Error('That code looks incomplete. Copy the whole code and try again.')}}
-const gathered=pc=>new Promise(ok=>{if(pc.iceGatheringState==='complete')return ok();const t=setTimeout(ok,3000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);ok()}})});
+const initCands=pc=>new Promise(ok=>{let done=0,tm=0,mx=0;const fin=()=>{if(done)return;done=1;clearTimeout(tm);clearTimeout(mx);pc.removeEventListener('icecandidate',on);pc.removeEventListener('icegatheringstatechange',gs);ok()};
+ const on=e=>{if(e.candidate&&/ typ (srflx|relay)/.test(e.candidate.candidate||'')&&!tm)tm=setTimeout(fin,500)},gs=()=>{if(pc.iceGatheringState==='complete')fin()};
+ pc.addEventListener('icecandidate',on);pc.addEventListener('icegatheringstatechange',gs);mx=setTimeout(fin,ICEWAIT);if(pc.iceGatheringState==='complete')fin()});
+function icIn(m,c){if(MP!==m||!c)return;const k=c.candidate||'';m.icSeen=m.icSeen||new Set();if(m.icSeen.has(k))return;m.icSeen.add(k);if(m.pc.remoteDescription)m.pc.addIceCandidate(c).catch(()=>{});else(m.icIn=m.icIn||[]).push(c)}
+function icFlush(m){(m.icIn||[]).splice(0).forEach(c=>m.pc.addIceCandidate(c).catch(()=>{}))}
 const viaMQ=m=>!(m.dc&&m.dc.readyState==='open')||m.mode==='cloud';
 const send=p=>{const m=MP;if(!m)return;if(!viaMQ(m)){m.dc.send(JSON.stringify(p));return}
  if(!m.sig)return;const msg=JSON.stringify({t:'data',f:m.role,i:m.sq=(m.sq||0)+1,d:p});if(m.cb)m.sig.pubTo(m.cb,msg);else if(m.role==='guest')m.sig.pub(msg)};
@@ -383,9 +387,9 @@ function mpShow(m){if(MP)mpLeave();G=null;MPM=m;if(apt)setApt(false);show('mp');
  $('mpH').style.display=m==='host'?'':'none';$('mpG').style.display=m==='join'?'':'none';$('mpmk').style.display='';$('rcode').textContent='';$('rc').value='';
  $('mpready').style.display=$('mpgo').style.display='none';$('mpL').style.display='none';$('mpP').style.display='none';$('mpRt').textContent='';$('mpUp').textContent='';$('etp').textContent='';mps(m==='host'?'Press "Create room" and give the code to your friend.':'Enter the room code from your friend.')}
 function mkPeer(role){if(MP)mpLeave();if(typeof RTCPeerConnection==='undefined')throw new Error('This browser does not support direct connections.');AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
- const pc=new RTCPeerConnection(iceCfg()),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;m.connP=new Promise(r=>{m.connOk=r});
+ const pc=new RTCPeerConnection(iceCfg()),m={role,me:role==='host'?0:1,pc,off:0,ready:0,chunks:[],got:0,size:0};MP=m;m.connP=new Promise(r=>{m.connOk=r});m.icAll=[];pc.onicecandidate=e=>{if(!e.candidate||!m.packed)return;const msg=JSON.stringify({t:'ice',c:e.candidate.toJSON?e.candidate.toJSON():e.candidate});m.icAll.push(msg);if(m.sigReady)m.sig.pub(msg)};
  pc.onconnectionstatechange=()=>{if(MP===m&&pc.connectionState==='failed'&&m.mode!=='cloud')$('mpRt').textContent='Connection: through the message servers (a direct connection was not possible)'};return m}
-function wire(m,dc){m.dc=dc;dc.binaryType='arraybuffer';dc.onopen=()=>onOpen(m);dc.onclose=()=>{if(MP===m)onMsg({k:'leave'})};
+function wire(m,dc){m.dc=dc;dc.binaryType='arraybuffer';dc.onopen=()=>onOpen(m);dc.onclose=()=>{if(MP===m&&!m.sess)onMsg({k:'leave'})};
  dc.onmessage=e=>{m.rx=performance.now();if(!m.sess&&m.role==='guest')sessionStart(m);if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data))}catch(x){}}else{m.t0=m.t0||performance.now();m.chunks.push(e.data);m.got+=e.data.byteLength;if(m.size){const pc=Math.min(99,Math.round(m.got/m.size*100));if(pc!==m.lp){m.lp=pc;mps('Downloading the song… '+pc+'% '+spd(m.got,m.t0,m.size));setMy('receiving',pc)}}}}}
 // Room-code matchmaking: a tiny MQTT-over-WebSocket client passes the connection details through free public brokers.
 // Only the short handshake goes through them; the game itself runs directly between the two devices.
@@ -408,16 +412,16 @@ async function signal(code,role,m,onSig){const inT='osuadv/v1/'+code+'/'+(role==
 async function createRoom(){try{return await createRoom0()}catch(e){if(MP&&MP.role==='host')mpLeave();throw e}}
 async function createRoom0(){if(!SONGFILE)throw new Error('Pick a song first.');const m=mkPeer('host');wire(m,m.pc.createDataChannel('g'));mps('Creating your room…');
  const code=Array.from({length:6},()=>RC[Math.random()*RC.length|0]).join(''),n=Math.random().toString(36).slice(2,8);
- m.code=code;startUpload(m);await m.pc.setLocalDescription(await m.pc.createOffer());await gathered(m.pc);const offer=JSON.stringify({t:'offer',n,d:await pack(m.pc.localDescription)});
- await signal(code,'host',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='st'&&MP===m){m.ps={s:x.s,p:x.p};renderPS();if(x.s==='dlerr')dlFallback(m);return}if(x.t!=='answer'||x.n!==n||m.answered||MP!==m)return;m.answered=1;m.ansVia=u;m.cb=u;try{await m.pc.setRemoteDescription(await unpack(x.d));mps('Friend found! Connecting…');const cc=customCloud();sessionStart(m);if(cc&&cc.f)switchCloud(m)}catch(e){m.answered=0}});
- m.sig.pub(offer);m.iv=setInterval(()=>{if(m.answered||MP!==m){clearInterval(m.iv);return}m.sig.pub(offer)},2500);
+ m.code=code;startUpload(m);await m.pc.setLocalDescription(await m.pc.createOffer());await initCands(m.pc);m.packed=1;const offer=JSON.stringify({t:'offer',n,d:await pack(m.pc.localDescription)});
+ await signal(code,'host',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='ice'){icIn(m,x.c);return}if(x.t==='st'&&MP===m){m.ps={s:x.s,p:x.p};renderPS();if(x.s==='dlerr')dlFallback(m);return}if(x.t!=='answer'||x.n!==n||m.answered||MP!==m)return;m.answered=1;m.ansVia=u;m.cb=u;try{if(x.d){await m.pc.setRemoteDescription(await unpack(x.d));icFlush(m)}}catch(e){m.p2pBad=1}try{m.icAll.forEach(c=>m.sig.pub(c))}catch(e){}mps('Friend found! Connecting…');const cc=customCloud();sessionStart(m);if(cc&&cc.f)switchCloud(m)});
+ m.sig.pub(offer);m.sigReady=1;m.icAll.forEach(x=>m.sig.pub(x));m.iv=setInterval(()=>{if(m.answered||MP!==m){clearInterval(m.iv);return}m.sig.pub(offer);m.icAll.forEach(x=>m.sig.pub(x))},2500);
  $('rcode').textContent=code;$('mpmk').style.display='none';m.link=inviteLink(code);$('mpL').style.display='';if(navigator.share)$('shl').style.display='';mps(LOC.protocol==='file:'?'Give this code to your friend. (Invite links only work once the game is on a website.) Waiting for them to join…':'Share the code or the invite link with your friend. Waiting for them to join…')}
 async function joinRoom(){const code=$('rc').value.trim().toUpperCase();if(code.length!==6)throw new Error('Enter the 6-character room code.');const m=mkPeer('guest');m.pc.ondatachannel=e=>wire(m,e.channel);mps('Looking for the room…');
- await signal(code,'guest',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='cloud'){if(m.mode!=='cloud'){m.cb=u;cloudStart(m)}return}if(x.t==='song'){if(m.songGot!==x.u&&!m.got2){m.songGot=x.u;m.size=x.sz;m.chunks=[];m.got=0;m.xd=0;mps('Downloading the song… (while connecting)');setMy('receiving',0);getSong(m,x.u)}return}if(x.t!=='offer'||m.got||MP!==m)return;m.got=1;
-  try{await m.pc.setRemoteDescription(await unpack(x.d));await m.pc.setLocalDescription(await m.pc.createAnswer());await gathered(m.pc);
-   const ans=JSON.stringify({t:'answer',n:x.n,d:await pack(m.pc.localDescription)});let k=0;m.sig.pub(ans);mps('Room found! Connecting…');
-   m.iv=setInterval(()=>{if(MP!==m||m.mode==='cloud'||(m.dc&&m.dc.readyState==='open')||++k>12){clearInterval(m.iv);return}m.sig.pub(ans)},1500)}catch(e){m.got=0;mps('Could not use that room. Check the code.')}});
- setTimeout(()=>{if(MP===m&&!m.got)mps('No room answered. Check the code, and make sure your friend has created the room.')},12000)}
+ await signal(code,'guest',m,async(x,u)=>{if(x.t==='data')return cloudIn(m,x,u);if(x.t==='ice'){icIn(m,x.c);return}if(x.t==='cloud'){if(m.mode!=='cloud'){m.cb=u;cloudStart(m)}return}if(x.t==='song'){if(m.songGot!==x.u&&!m.got2){m.songGot=x.u;m.size=x.sz;m.chunks=[];m.got=0;m.xd=0;mps('Downloading the song… (while connecting)');setMy('receiving',0);getSong(m,x.u)}return}if(x.t!=='offer'||m.offered||MP!==m)return;m.offered=1;
+  try{await m.pc.setRemoteDescription(await unpack(x.d));icFlush(m);await m.pc.setLocalDescription(await m.pc.createAnswer());await initCands(m.pc);m.packed=1;
+   const ans=JSON.stringify({t:'answer',n:x.n,d:await pack(m.pc.localDescription)});let k=0;m.sig.pub(ans);m.sigReady=1;m.icAll.forEach(c=>m.sig.pub(c));mps('Room found! Connecting…');
+   m.iv=setInterval(()=>{if(MP!==m||m.mode==='cloud'||(m.dc&&m.dc.readyState==='open')||++k>12){clearInterval(m.iv);return}m.sig.pub(ans);m.icAll.forEach(c=>m.sig.pub(c))},1500)}catch(e){m.p2pBad=1;const a0=JSON.stringify({t:'answer',n:x.n,d:null});let k=0;m.sig.pub(a0);m.sigReady=1;mps('Room found! Connecting…');m.iv=setInterval(()=>{if(MP!==m||m.sess||++k>12){clearInterval(m.iv);return}m.sig.pub(a0)},1500)}});
+ setTimeout(()=>{if(MP===m&&!m.offered)mps('No room answered. Check the code, and make sure your friend has created the room.')},12000)}
 function syncClock(m){return new Promise(ok=>{let n=0,best=1e9;m.pg=(t0,th)=>{const t1=Date.now(),rtt=t1-t0;if(rtt<best){best=rtt;m.off=th+rtt/2-t1}if(++n>=8)ok();else send({k:'ping',t:Date.now()})};send({k:'ping',t:Date.now()});setTimeout(ok,5000)})}
 async function streamSong(m){const ab=await SONGFILE.arrayBuffer(),dc=m.dc,mx=(m.pc.sctp&&m.pc.sctp.maxMessageSize)||0,N=Math.max(16384,Math.min(32768,mx||16384)),t0=performance.now();dc.bufferedAmountLowThreshold=2<<20;
  for(let o=0,i=0;o<ab.byteLength;o+=N,i++){if(dc.readyState!=='open')return;if(dc.bufferedAmount>8<<20)await new Promise(r=>{dc.onbufferedamountlow=()=>{dc.onbufferedamountlow=null;r()}});dc.send(ab.slice(o,o+N));if(i%8==0){const pc=Math.round(o/ab.byteLength*100);mps('Sending the song… '+pc+'% '+spd(Math.max(0,o-dc.bufferedAmount),t0,ab.byteLength));setMy('sending',pc)}}
@@ -437,13 +441,13 @@ function setMy(s,p){const m=MP;if(!m)return;const k=s+'|'+(p==null?'':p);if(m.se
 function renderPS(){const m=MP;if(!m||!m.ps)return;const who=m.role==='host'?'Your friend':'The host',s=m.ps.s,p=m.ps.p,t=(STX[s]||s)+(p!=null&&(s==='sending'||s==='receiving'||s==='analyzing')?' '+p+'%':'');
  $('mpP').style.display='';$('mpPn').textContent=who;$('mpPs').textContent=t;$('mpPb').style.width=(p!=null?p:['loaded','waiting','ready','playing','results'].indexOf(s)>=0?100:s==='away'||s==='left'?0:8)+'%';$('etp').textContent=(m.role==='host'?'Your teammate':'The host')+': '+t}
 document.addEventListener('visibilitychange',()=>{const m=MP;if(!m||!m.sess)return;if(document.hidden){m.back=m.cur;send({k:'st',s:'away',p:null});m.sentK='away|'}else{m.sentK='';if(m.back)setMy(m.back.s,m.back.p)}});
-let CLOUDWAIT=10000,SONGWAIT=1500;
+let CLOUDWAIT=10000,SONGWAIT=1500,ICEWAIT=1500;
 const spd=(done,t0,total)=>{const dt=(performance.now()-t0)/1000;if(dt<.6||done<=0)return'';const r=done/dt;return'· '+(r>=1048576?(r/1048576).toFixed(1)+' MB/s':Math.round(r/1024)+' KB/s')+(total?' · about '+Math.max(0,Math.round((total-done)/r))+' s left':'')};
 function xferDone(m){if(m.xd||!m.t0)return;m.xd=1;const dt=Math.max(.05,(performance.now()-m.t0)/1000),mb=m.got/1048576;$('mpUp').textContent='Song received: '+mb.toFixed(1)+' MB in '+dt.toFixed(1)+' s ('+(mb/dt).toFixed(1)+' MB/s)'}
 function customCloud(){try{const v=JSON.parse(localStorage.getItem('dc:cloud'));return v&&v.u&&v.k?{u:v.u.replace(/\/+$/,''),k:v.k,b:v.b||'osu-temp-music',f:!!v.f}:null}catch(e){return null}}
 function cloudIn(m,x,u){if(x.f===m.role||MP!==m)return;if(m.cb){if(u!==m.cb)return}else if(m.role==='guest')m.cb=u;else return;m.rx=performance.now();if(!m.sess)sessionStart(m);onMsg(x.d)}
 // A session starts the moment both sides can talk (through the message servers); a direct connection upgrades it later.
-function sessionStart(m){if(m.sess||MP!==m)return;m.sess=1;m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1200);if(m.connOk)m.connOk();
+function sessionStart(m){if(m.sess||MP!==m)return;m.sess=1;m.rx=performance.now();m.hb=setInterval(()=>send({k:'hb'}),1200);m.wd=setInterval(()=>{if(MP!==m){clearInterval(m.wd);return}const lim=m.ps&&m.ps.s==='away'?180000:20000;if(performance.now()-m.rx>lim&&(!G||G.over)){clearInterval(m.wd);onMsg({k:'leave'})}},3000);if(m.connOk)m.connOk();
  if(m.mode!=='cloud')$('mpRt').textContent='Connection: through the message servers for now (a direct connection is being set up)';
  if(m.role==='host'){setMy('connected');hostSendSong(m)}else{setMy('syncing');m.sp=syncClock(m)}}
 function switchCloud(m){if(MP!==m||m.role!=='host'||m.mode==='cloud'||!m.cb)return;m.mode='cloud';m.sig.pubTo(m.cb,JSON.stringify({t:'cloud'}));cloudStart(m)}
@@ -455,7 +459,7 @@ async function hostSendSong(m){const info={k:'room',fname,tempo:TEMPO,sel,diff,s
   if(m.dc&&m.dc.readyState==='open'&&m.mode!=='cloud'){m.songStarted=1;streamSong(m)}
   else{clearTimeout(m.songWait);m.songWait=setTimeout(()=>{if(MP===m&&!m.songStarted){m.songStarted=1;mps('Sending the song through the message servers…');cloudStream(m,info)}},m.mode==='cloud'?0:SONGWAIT)}}catch(e){mps(e.message||String(e))}}
 function coopNext(){const m=MP;if(!m||m.role!=='host')return;if(!m.sess){$('warn').textContent='The connection to your friend is gone. Leave co-op and create a new room.';return}
- stopPv();m.ready=0;m.upP=null;m.up=null;m.cpath=null;m.deleted=0;m.sentK='';m.songSent=0;m.songUrl=null;m.noStorage=0;m.songStarted=0;clearTimeout(m.songWait);m.xd=0;chatSys('You picked a new song: '+fname);
+ stopPv();m.ready=0;m.upP=null;m.up=null;m.cpath=null;m.deleted=0;m.sentK='';m.songSent=0;m.songUrl=null;m.noStorage=0;m.songStarted=0;m.slowWarned=0;clearTimeout(m.songWait);m.xd=0;chatSys('You picked a new song: '+fname);
  show('mp');$('mpt').textContent='Next song';$('mpH').style.display='';$('mpmk').style.display='none';$('mpL').style.display='none';$('mpG').style.display='none';$('mpready').style.display='none';$('mpgo').style.display='none';mps('Sending the new song…');hostSendSong(m)}
 async function cloudUpload(m){const c=customCloud();if(!c)throw new Error('Add your storage details first.');const ext=((SONGFILE.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,''))||'mp3',path=m.code+'/'+Math.random().toString(36).slice(2,10)+'.'+ext,h={apikey:c.k,Authorization:'Bearer '+c.k};
  let r;try{r=await fetch(c.u+'/storage/v1/object/'+c.b+'/'+path,{method:'POST',headers:{...h,'Content-Type':SONGFILE.type||'audio/mpeg'},body:SONGFILE})}catch(e){throw new Error('Could not reach your storage. Check the URL.')}
@@ -469,14 +473,14 @@ function dlFallback(m){if(m.role!=='host')return;m.songSent=0;m.songUrl=null;m.n
 function announceSong(m){const p=m.upP||startUpload(m);if(!p)return;p.then(url=>{if(!url||MP!==m||m.songSent||m.noStorage)return;m.songSent=1;m.songUrl=url;const msg=JSON.stringify({t:'song',u:url,sz:SONGFILE.size});m.sig.pubTo(m.ansVia,msg);m.annT=setTimeout(()=>{if(MP===m&&m.sig)m.sig.pubTo(m.ansVia,msg)},3000);mps('Friend found! Their download starts now while we connect…')})}
 // Song sent in 24 KB pieces with acknowledgements, so lost or late pieces are simply sent again.
 const b64enc=u=>{let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
-async function cloudStream(m,info){const ab=new Uint8Array(await SONGFILE.arrayBuffer()),N=32768,total=Math.ceil(ab.length/N);info.cn=total;send(info);
+async function cloudStream(m,info){const ab=new Uint8Array(await SONGFILE.arrayBuffer()),N=16384,total=Math.ceil(ab.length/N);info.cn=total;send(info);
  const c=m.cs={acked:new Uint8Array(total),cum:0,next:0,win:8,ssth:48,sent:new Float64Array(total),flight:0,t0:performance.now(),done:0};
  const out=i=>{c.sent[i]=performance.now();send({k:'sc',i,d:b64enc(ab.subarray(i*N,(i+1)*N))})};
  const pump=()=>{if(MP!==m||c.done)return;const now=performance.now();
   for(let i=c.cum;i<c.next;i++)if(!c.acked[i]&&now-c.sent[i]>3500){out(i);c.ssth=Math.max(4,c.win>>1);c.win=c.ssth}
   while(c.next<total&&c.flight<c.win){c.flight++;out(c.next++)}
   if(c.cum>=total){c.done=1;clearInterval(c.w);send({k:'songend'});setMy('waiting');mps('Song sent in '+((performance.now()-c.t0)/1000).toFixed(1)+' s. Waiting for your friend to get ready…');return}
-  const pc=Math.round(c.cum/total*100);setMy('sending',pc);mps('Sending the song… '+pc+'% '+spd(c.cum*N,c.t0,ab.length))};
+  const pc=Math.round(c.cum/total*100),el=(performance.now()-c.t0)/1000;if(el>8&&c.cum*N/el<25600&&!m.slowWarned){m.slowWarned=1;$('mpAdv').open=true;chatSys('The message servers are very slow, so the song would take a long time. Add your storage under "Connection helper" and press "Use storage for this song".')}setMy('sending',pc);mps('Sending the song… '+pc+'% '+spd(c.cum*N,c.t0,ab.length)+(m.slowWarned?' · too slow. Add your storage under "Connection helper" for a fast transfer.':''))};
  m.ack=(i,sk)=>{if(c.done)return;let n=0;for(let k=c.cum;k<i&&k<total;k++)if(!c.acked[k]){c.acked[k]=1;n++}for(const k of sk||[])if(k>=0&&k<total&&!c.acked[k]){c.acked[k]=1;n++}
   while(c.cum<total&&c.acked[c.cum])c.cum++;c.flight=Math.max(0,c.flight-n);if(n)c.win=Math.min(96,c.win+(c.win<c.ssth?n:Math.ceil(n/c.win)));pump()};
  c.w=setInterval(pump,1000);pump()}
@@ -518,9 +522,9 @@ function onMsg(p){if(!MP)return;switch(p.k){
 function startHost(){if(!MP||!MP.ready)return;notes=build();place();MP.startAt=Date.now()+4500;MP.notes=notes;
  send({k:'start',at:MP.startAt,notes:notes.map(n=>[+n.t.toFixed(3),+n.s.toFixed(2),n.big?1:0,n.num,n.grp,n.nx,n.ny])});go()}
 function modeVis(){document.querySelectorAll('.modes').forEach(e=>e.style.display=MP?'none':'')}
-function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();chatClear();pzReset();clearInterval(m.iv);clearInterval(m.hb);clearTimeout(m.cloudT);if(m.cs)clearInterval(m.cs.w);cloudDelete(m);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
+function mpEnd(){if(!MP)return;const m=MP;MP=null;modeVis();chatClear();pzReset();clearInterval(m.iv);clearInterval(m.hb);clearInterval(m.wd);clearTimeout(m.cloudT);if(m.cs)clearInterval(m.cs.w);cloudDelete(m);if(m.sig)m.sig.close();setTimeout(()=>{try{m.dc.close()}catch(e){}try{m.pc.close()}catch(e){}},1500)}
 function mpLeave(){if(MP)send({k:'leave'});mpEnd()}
-$('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',()=>{if(MP){send({k:'leave'});cloudDelete(MP)}});
+$('mpj').onclick=()=>mpShow('join');$('mph').onclick=()=>mpShow('host');$('mpmk').onclick=guard(createRoom);$('jn').onclick=guard(joinRoom);$('mpgo').onclick=startHost;addEventListener('pagehide',e=>{if(MP&&!e.persisted){send({k:'leave'});cloudDelete(MP)}});
 $('mpready').onclick=()=>{AC.resume();send({k:'ready'});setMy('ready');$('mpready').style.display='none';mps('Ready! Waiting for the host to start…')};
 $('mpback').onclick=()=>{const gs=MP&&MP.role==='guest';mpLeave();show(MPM==='host'&&!gs?'pick':'up')};
 $('pzb').onclick=()=>pause(!$('pz').classList.contains('on'));
@@ -539,6 +543,10 @@ async function testCloud(){const out=$('ctr'),c=customCloud();if(!c){out.textCon
   L.push(L.some(x=>x[0]==='✗')?'\nFix the items marked ✗, then test again.':'\nCloud mode is ready.')}
  catch(e){L.push('✗ Could not reach '+c.u+'. Check the URL (it looks like https://abcd1234.supabase.co) and your internet connection.')}show()}
 $('cts').onclick=testCloud;
+$('cuse').onclick=()=>{saveCloud();if(!customCloud()){$('ctr').textContent='Enter the Supabase URL and the publishable key first.';return}const m=MP;
+ if(!m||m.role!=='host'){$('ctr').textContent='Saved. It will be used the next time you host.';return}
+ if(m.cs){m.cs.done=1;clearInterval(m.cs.w)}clearTimeout(m.songWait);m.noStorage=0;m.songSent=0;m.songStarted=0;m.slowWarned=0;m.upP=null;m.up=null;m.cpath=null;m.deleted=0;
+ if(m.sess){$('ctr').textContent='Switching to storage…';hostSendSong(m)}else $('ctr').textContent='Saved. It will be used as soon as your friend joins.'};
 // ===== practice mode + animated tutorial =====
 function startPractice(){stopPv();AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();const sr=AC.sampleRate,dur=44,per=60/92,b=AC.createBuffer(1,Math.floor(sr*dur),sr),d=b.getChannelData(0);
  for(let k=0;k*per<dur-.5;k++){const s0=Math.floor(k*per*sr);for(let i=0;i<sr*.25&&s0+i<d.length;i++){const u2=i/sr;d[s0+i]+=.8*Math.sin(6.283*(55+80*Math.exp(-u2*35))*u2)*Math.exp(-u2*18)}
@@ -609,7 +617,7 @@ $('pzend').onclick=()=>{if(MP&&MP.role==='host'&&G&&!G.over){send({k:'end',why:'
 $('nwm').onclick=()=>{if(!MP||MP.role!=='host')return;setMy('choosing');chatSys('You are choosing a new song…');$('f2').click()};
 $('f2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)analyze(f);else setMy('results')};$('f2').oncancel=()=>setMy('results');
 // ===== version, invite links =====
-const VERSION='3.0',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+const VERSION='3.1',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
 const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}
