@@ -79,7 +79,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <label id="drop" tabindex="-1"><input type="file" id="f" accept="audio/*">Choose a song, or drop it here<br><small style="color:var(--mut);font-weight:400">MP3, WAV, OGG or M4A. It stays in your browser.</small></label>
  <div id="err"></div>
  <button id="tutb" class="alt" style="margin-right:8px">▶ How to play</button><button id="mpj" class="alt">Join a friend's co-op room</button>
- <div class="keys"><span>Click or tap the circles in order</span><span><kbd>Z</kbd> / <kbd>X</kbd> click at your cursor</span><span><kbd>Q</kbd> toggles auto assist</span></div>
+ <div class="keys"><span>Click or tap the circles in order</span><span>Any key clicks at your cursor (not <kbd>Esc</kbd>, <kbd>Q</kbd>, <kbd>W</kbd>, <kbd>E</kbd>)</span><span><kbd>Q</kbd> toggles auto assist</span></div>
 </section>
 
 <section class="scr" id="wait">
@@ -254,8 +254,13 @@ function pzReset(){$('pzc').style.display='none';$('pzm').style.display='none';$
 function quit(){if(G){G.over=1;try{G.s.stop()}catch(e){}}$('pz').classList.remove('on');AC.resume();const gs=MP&&MP.role==='guest';mpLeave();if(gs||PR){PR=false;show('up')}else{show('pick');refresh()}}
 $('rz').onclick=()=>pause(0);$('qt').onclick=quit;
 document.addEventListener('visibilitychange',()=>document.hidden&&G&&!G.over&&!MP&&pause(1));
-addEventListener('keydown',e=>{if(!G||G.over)return;const k=e.key.toLowerCase();
- if(k==='escape')pause(!$('pz').classList.contains('on'));else if(G.paused)return;else if(k==='z'||k==='x'){if(!e.repeat)hit(G.mx,G.my)}else if(k==='q'){if(!MP){assist=!assist;setAs()}}else if(k==='w')setApt(!apt);else if(k==='e')setAplay(!aplay)});
+addEventListener('keydown',e=>{if(!G||G.over)return;const k=String(e.key||'').toLowerCase();
+ if(k==='escape'){pause(!$('pz').classList.contains('on'));return}
+ if(G.paused)return;
+ if(!MP&&(k==='q'||k==='w'||k==='e')){if(k==='q'){assist=!assist;setAs()}else if(k==='w')setApt(!apt);else setAplay(!aplay);return}
+ const tn=e.target&&e.target.tagName;if(tn==='INPUT'||tn==='TEXTAREA'||tn==='SELECT')return;
+ if(e.repeat||aplay||e.ctrlKey||e.metaKey||e.altKey||/^(shift|control|alt|altgraph|meta|os|capslock|numlock|scrolllock|contextmenu|dead|unidentified|process|fn)$/.test(k)||/^f\d+$/.test(k))return;
+ e.preventDefault();const ae=document.activeElement;if(ae&&ae.tagName==='BUTTON')ae.blur();curSend(G.mx,G.my,1);hit(G.mx,G.my)});
 cv.onpointermove=e=>{if(G&&!apt){G.mx=e.clientX;G.my=e.clientY;G.ms=e.pointerType==='mouse';curSend(e.clientX,e.clientY);if(G.ms){G.tr.push([G.mx,G.my]);if(G.tr.length>16)G.tr.shift()}}};
 cv.onpointerdown=e=>{e.preventDefault();if(!G||G.paused||aplay)return;if(apt)hit(G.mx,G.my);else{G.mx=e.clientX;G.my=e.clientY;curSend(e.clientX,e.clientY,1);hit(e.clientX,e.clientY)}};
 const fxp=(t,n,st,col)=>G.fx.push({t,x:PX(n.nx),y:PY(n.ny)-R(n)*1.4,st,col});
@@ -553,7 +558,7 @@ function startPractice(){stopPv();AC=AC||new(window.AudioContext||window.webkitA
   const h0=Math.floor((k*per+per/2)*sr);let pv=0;for(let i=0;i<sr*.06&&h0+i<d.length;i++){const n=Math.random()*2-1;d[h0+i]+=.12*(n-pv)*Math.exp(-i/sr*90);pv=n}}
  buf=b;fname='Practice';TEMPO=92;SEED=4242;sel='beat';diff=.55;const bt=[];for(let k=0;k<60;k++){const t=2.6+k*per;if(t>dur-2)break;bt.push({t,s:k%4===0?.95:.5})}
  bands={beat:bt,kick:bt,snare:[],hat:[],all:bt};PR=true;go()}
-const TVC=[[0,'The circles','Circles appear in time with the music. A ring shrinks toward each one.'],[9,'Timing','Click or tap the circle exactly when the ring touches it. Follow the numbers 1, 2, 3, 4. The bright circle is always next.'],[20,'Combos and energy','Perfect and Good hits build your combo. A miss breaks it and drains the blue energy bar.'],[31,'Fever and gold circles','Hit streaks fill the purple meter. When it is full, FEVER doubles your score. Big gold circles are worth double.'],[41,'Co-op','Two players take turns, 30 seconds each, with one shared score and energy. If your partner runs out of energy, you take over. Pausing is shared, and you can chat.'],[53,'Tips','Auto assist forgives near misses. If rings close too fast, raise the Approach slider. Headphones help with timing.']],TVEND=62;
+const TVC=[[0,'The circles','Circles appear in time with the music. A ring shrinks toward each one.'],[9,'Timing','Click or tap the circle exactly when the ring touches it. Follow the numbers 1, 2, 3, 4. The bright circle is always next. On a computer you can also hover over it and press any key.'],[20,'Combos and energy','Perfect and Good hits build your combo. A miss breaks it and drains the blue energy bar.'],[31,'Fever and gold circles','Hit streaks fill the purple meter. When it is full, FEVER doubles your score. Big gold circles are worth double.'],[41,'Co-op','Two players take turns, 30 seconds each, with one shared score and energy. If your partner runs out of energy, you take over. Pausing is shared, and you can chat.'],[53,'Tips','Auto assist forgives near misses. If rings close too fast, raise the Approach slider. Headphones help with timing.']],TVEND=62;
 const TVN=[[3,400,225,1,'P'],[6,250,200,1,'P'],[8.4,560,250,2,'G'],[12,200,150,1,'P'],[13.2,380,260,2,'P'],[14.4,560,160,3,'P'],[15.6,620,300,4,'P'],[17.2,300,320,1,'P'],[18.4,160,220,2,'P'],
  [22.4,240,170,1,'P'],[23.6,420,280,2,'P'],[24.8,600,180,3,'G'],[26,500,320,4,'M'],[27.2,300,300,1,'P'],[28.4,180,160,2,'P'],[29.6,400,220,3,'P'],
  [32.2,200,200,1,'P'],[33.2,340,300,2,'P'],[34.2,480,160,3,'P'],[35.2,620,260,4,'P'],[36.2,420,340,1,'P'],[37.2,280,180,2,'P'],[38.2,460,230,3,'P'],[39.6,400,225,1,'P',1],
@@ -617,7 +622,7 @@ $('pzend').onclick=()=>{if(MP&&MP.role==='host'&&G&&!G.over){send({k:'end',why:'
 $('nwm').onclick=()=>{if(!MP||MP.role!=='host')return;setMy('choosing');chatSys('You are choosing a new song…');$('f2').click()};
 $('f2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)analyze(f);else setMy('results')};$('f2').oncancel=()=>setMy('results');
 // ===== version, invite links =====
-const VERSION='3.1',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+const VERSION='3.2',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
 const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}
