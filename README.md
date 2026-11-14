@@ -27,6 +27,22 @@ The analyzer returns the original note contract (`{ t, s }` events and a `bpm` v
 
 Detection is heuristic: very sparse, heavily syncopated, or tempo-ambiguous music may still need the in-game **Sync nudge** control.
 
+## Circle focus
+
+The next clickable circle is animated with a breathing glow, a rotating dashed crown, and a brighter rim. Upcoming circles are dimmed slightly so the active target is easier to follow. The solid closing ring remains the timing cue, and the hit radius stays stable. The animation is reduced when the operating system requests reduced motion.
+
+## Experimental live mode
+
+Live mode uses the browser's screen-capture permission to listen to audio from another tab, window, or screen:
+
+1. Open **Live mode** and click **Allow screen audio**.
+2. Share the music tab with **Also share tab audio**, or share a screen/window with system audio.
+3. Play music. After a short listening window, the game locks to the pulse and generates circles live.
+
+Only audio is analyzed locally. The screen image is never drawn, recorded, or uploaded. Capture stops when you leave live mode, stop the session, or close the page. A dedicated worklet collects PCM, a worker re-runs the beat detector on rolling windows, and `live-beats.js` forecasts upcoming pulses so circles can approach before the hit time.
+
+Live mode is under development: it needs a secure context (HTTPS or localhost), works best in desktop Chrome/Edge, and can drift on tempo changes or unclear rhythms. Use the **Live sync** slider on the setup screen or pause menu to compensate for early/late hits.
+
 ## Tests
 
 Node 18 or newer is enough; there are no test dependencies:
@@ -35,4 +51,4 @@ Node 18 or newer is enough; there are no test dependencies:
 npm test
 ```
 
-The suite renders deterministic synthetic drums and checks tempo locking, timing drift, stereo cancellation, quiet/loud invariance, silence, sustained tones, tempo changes, sample-rate stability, swing, instrument-layer separation, progress reporting, and cancellation.
+The suite renders deterministic synthetic drums and checks tempo locking, timing drift, stereo cancellation, quiet/loud invariance, silence, sustained tones, tempo changes, sample-rate stability, swing, instrument-layer separation, progress reporting, and cancellation. It also tests the live pulse clock: phase locking, overlapping-window deduplication, silence stop, tempo-change recovery, reset, and rolling detector snapshots.

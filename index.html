@@ -71,6 +71,10 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 #chl .cmr button.on{border-color:var(--cy);background:#1d3b45}
 .chr{display:flex;gap:6px;margin-top:8px}.chr input{flex:1;padding:9px 12px;border-radius:10px;border:2px solid #4a2a5c;background:#14061f;color:var(--ink);font:inherit;-webkit-user-select:text;user-select:text}.chr button{padding:8px 14px;font-size:14px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 74px);max-width:80vw;background:#24102fe6;border:1px solid #5a3670;color:var(--ink);padding:8px 14px;border-radius:14px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:4}#toast.on{opacity:1}
+.beta{display:inline-block;vertical-align:middle;font:800 11px/1.4 Outfit,system-ui,sans-serif;letter-spacing:.4px;text-transform:uppercase;color:#14061f;background:var(--gold);border-radius:999px;padding:2px 8px;margin-left:6px}
+.steps{color:var(--mut);padding-left:22px;margin:0 0 14px}.steps li{margin:0 0 8px}.steps b{color:var(--ink)}
+.notice{border:1px solid #5a3670;border-left:4px solid var(--gold);border-radius:10px;background:#1c0a28;color:var(--mut);padding:10px 12px;font-size:14px;margin:0 0 12px}.notice b{color:var(--ink)}.notice.privacy{border-left-color:var(--cy)}
+#liveStatus{min-height:44px;color:var(--ink)}#livePause{width:min(360px,86vw)}button:disabled{opacity:.5;cursor:not-allowed}
 </style></head><body>
 
 <section class="scr on" id="up">
@@ -78,8 +82,23 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <p>Drop in any song. We pull the beats out of it, you pick which ones to play, and glowing circles appear in time. Click each one as the ring closes in.</p>
  <label id="drop" tabindex="-1"><input type="file" id="f" accept="audio/*">Choose a song, or drop it here<br><small style="color:var(--mut);font-weight:400">MP3, WAV, OGG or M4A. It stays in your browser.</small></label>
  <div id="err"></div>
- <button id="tutb" class="alt" style="margin-right:8px">▶ How to play</button><button id="mpj" class="alt">Join a friend's co-op room</button>
+ <button id="tutb" class="alt" style="margin-right:8px">▶ How to play</button><button id="mpj" class="alt" style="margin-right:8px">Join a friend's co-op room</button><button id="liveb" class="alt">🧪 Live mode <span class="beta">experimental</span></button>
  <div class="keys"><span>Click or tap the circles in order</span><span>Any key clicks at your cursor (not <kbd>Esc</kbd>, <kbd>Q</kbd>, <kbd>W</kbd>, <kbd>E</kbd>)</span><span><kbd>Q</kbd> toggles auto assist</span></div>
+</section>
+
+<section class="scr" id="live">
+ <h2>Live mode <span class="beta">under development</span></h2>
+ <p>Play music in another tab or app. OSU Advanced listens to the shared audio, locks onto the pulse, and sends circles at you live.</p>
+ <ol class="steps">
+  <li>Click <b>Allow screen audio</b> below.</li>
+  <li>In the browser picker, choose the tab playing music and turn on <b>Also share tab audio</b>. You can also share a screen/window with system audio if your browser offers it.</li>
+  <li>Start or resume the music. After a few seconds of listening, the game begins automatically.</li>
+ </ol>
+ <div class="notice"><b>Experimental:</b> circles are predicted a little ahead of the beat, so timing can drift when a song changes tempo or has no clear pulse. Use the sync slider if hits feel early or late. Desktop Chrome or Edge over HTTPS is recommended; some browsers cannot share audio. If an embedded preview blocks the picker, open the game in a new tab.</div>
+ <div class="notice privacy">Only audio is analyzed, in your browser. The screen image is never drawn, recorded, or uploaded, and sharing stops when you leave live mode.</div>
+ <div class="lat"><label for="liveLat">Live sync</label><input type="range" id="liveLat" min="-250" max="250" step="10" value="0" aria-label="Live timing offset"><output id="liveLo">0 ms</output></div>
+ <div class="go"><button id="liveStart">Allow screen audio</button><button id="liveStop" class="alt" style="display:none">Stop live mode</button><button id="liveBack" class="alt">Back</button></div>
+ <p id="liveStatus" role="status" aria-live="polite"></p>
 </section>
 
 <section class="scr" id="wait">
@@ -123,7 +142,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 <div id="ver"></div>
 <div id="chat" style="display:none"><div id="chl"></div><div class="chr"><input id="chi" maxlength="200" placeholder="Message your teammate…" autocomplete="off"><button id="chs">Send</button></div></div><div id="toast"></div><input type="file" id="f2" accept="audio/*" style="display:none">
 <button id="pzb" aria-label="Pause">❚❚</button>
-<div id="pz"><div id="pzc" style="display:none"></div><h2 id="pzt">Paused</h2><p id="pzm" style="display:none;text-align:center;max-width:340px;margin:0 0 6px"></p><div class="vols"></div><div class="modes"></div><button id="rz">Resume</button><button id="pzend" class="alt" style="display:none">End match for everyone</button><div id="cm_pz" style="width:min(360px,86vw)"></div><button id="qt" class="alt">Back to menu</button><small id="verp"></small></div>
+<div id="pz"><div id="pzc" style="display:none"></div><h2 id="pzt">Paused</h2><p id="pzm" style="display:none;text-align:center;max-width:340px;margin:0 0 6px"></p><div class="vols"></div><div class="modes"></div><div class="lat" id="livePause" style="display:none"><label for="liveLatP">Live sync</label><input type="range" id="liveLatP" min="-250" max="250" step="10" value="0" aria-label="Live timing offset while paused"><output id="liveLoP">0 ms</output></div><button id="rz">Resume</button><button id="pzend" class="alt" style="display:none">End match for everyone</button><div id="cm_pz" style="width:min(360px,86vw)"></div><button id="qt" class="alt">Back to menu</button><small id="verp"></small></div>
 <canvas id="cv"></canvas>
 
 <section class="scr" id="end">
@@ -134,12 +153,14 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
 </section>
 
 <script src="beat-detection.js"></script>
+<script src="live-beats.js"></script>
 <script>
 const $=i=>document.getElementById(i),cv=$('cv');
 const show=n=>{document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===n));cv.style.display=n==='game'?'block':'none';$('as2').style.display=n==='game'&&!MP?'block':'none';$('pzb').style.display=n==='game'?'block':'none';$('ver').style.display=n==='game'?'none':'block';if(typeof chatPlace==='function')chatPlace(n)};
 const B={beat:['Main beat','Steady pulse locked to the song tempo. Easiest.'],kick:['Kick & bass','Every low thump found in the spectrum'],snare:['Snare & clap','Backbeat snaps from the mids'],hat:['Hi-hats','Fast, shimmery top end. Busy.'],all:['Full mix','Every onset across the spectrum']};
 let AC,buf,bands={},sel='beat',diff=.45,notes=[],pv=null,G=null,W,H,cx,gy,u,Z,dpr=1;
 let LEAD=1.9;const leadCap=()=>Math.min(2.7,7*diff)-.3,lead=()=>Math.min(LEAD,leadCap()),tick=()=>new Promise(r=>setTimeout(r,0));
+const REDUCED_MOTION=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const P=(p,m)=>{$('bar').style.width=p*100+'%';$('msg').textContent=m;if(MP&&MP.role==='host')setMy('analyzing',Math.round(p*100))};
 
 $('f').onchange=e=>e.target.files[0]&&analyze(e.target.files[0]);
@@ -165,6 +186,7 @@ function detectBeats(channels,sampleRate,onProgress,signal){
  });
 }
 async function analyze(file){
+ liveCleanup();
  if(analysisController)analysisController.abort();
  const controller=new AbortController();analysisController=controller;const job=controller.signal;
  PR=false;SONGFILE=file;fname=file.name.replace(/\.[^.]+$/,'');show('wait');AC=AC||new(window.AudioContext||window.webkitAudioContext)();$('err').textContent='';
@@ -216,7 +238,7 @@ const BK=Array.from({length:16},(_,i)=>({x:i*.137%1,y:i*.291%1,r:22+(i*17)%48,s:
 function bpm(){return TEMPO}
 const setAs=()=>document.querySelectorAll('.as').forEach(b=>{b.textContent='Auto assist: '+(assist?'ON':'OFF');b.classList.toggle('on',assist)});
 document.querySelectorAll('.as').forEach(b=>b.onclick=()=>{if(MP)return;assist=!assist;setAs();b.blur()});setAs();
-$('play').onclick=()=>MP&&MP.role==='host'?coopNext():go();$('again').onclick=()=>MP&&MP.role==='host'?startHost():go();$('chg').onclick=()=>{show('pick');refresh()};$('nw').onclick=()=>{if(MP)mpLeave();PR=false;show('up')};
+$('play').onclick=()=>MP&&MP.role==='host'?coopNext():go();$('again').onclick=()=>G&&G.live?openLive():MP&&MP.role==='host'?startHost():go();$('chg').onclick=()=>{show('pick');refresh()};$('nw').onclick=()=>{liveCleanup();if(MP)mpLeave();PR=false;show('up')};
 const SEGL=30,actor=t=>{const s=Math.floor(t/SEGL),ks=(G&&G.kos)||[];let o=s;for(const k of ks)if(k.sw&&k.sg<s)o++;const k=ks.find(x=>x.sg===s&&x.sw);if(k&&t>=k.t)o++;return o&1},own=n=>!MP||actor(n.t)===MP.me;
 function tgt2(){const a=tgt();if(!a)return;let i=a.i+1;while(notes[i]&&(notes[i].done||!own(notes[i])))i++;return notes[i]}
 function tgt(){let i=G.n;if(MP)while(notes[i]&&(notes[i].done||!own(notes[i])))i++;return notes[i]}
@@ -233,22 +255,22 @@ function go(){stopPv();notes=MP&&MP.notes?MP.notes:build();notes.forEach((n,i)=>
  AC.resume();$('pz').classList.remove('on');if(MP)MP.pz={me:0,them:0};pzReset();const s=AC.createBufferSource();s.buffer=buf;const mg=AC.createGain();mg.gain.value=VM;s.connect(mg);mg.connect(AC.destination);const T0=MP?AC.currentTime+Math.max(.5,(MP.startAt-MP.off-Date.now())/1000):AC.currentTime+3;s.start(T0);
  G={practice:PR?1:0,mp:MP?1:0,q:0,sg:-1,kos:[],pc:{},s,mg,T0,sc:0,combo:0,best:0,hp:100,p:0,g:0,m:0,fx:[],pa:[],tr:[],over:0,paused:0,fv:0,fe:-9,bn:[],ct:-9,bi:-1,n:0,mx:innerWidth/2,my:innerHeight/2,ms:0,off:+$('lat').value/1000};
  s.onended=()=>{if(G&&G.s===s&&!G.over)fin('Track complete')};show('game');rs();if(notes[0].nx===undefined)place();modeVis();if(MP)setMy('playing')}
-function fin(t){if(G.over)return;if(G.practice)t='Practice complete';G.over=1;try{G.s.stop()}catch(e){}if(MP&&MP.pz)MP.pz={me:0,them:0};G.paused=0;try{AC.resume()}catch(e){}if(MP)send({k:'end'});if(G.mp)t='Co-op · '+t;
- const tot=notes.length,acc=(G.p+.6*G.g)/tot,died=G.hp<=0,rk=died?'F':acc>=.95?'S':acc>=.85?'A':acc>=.7?'B':acc>=.5?'C':'D',key='dc:'+fname+sel+diff;let pb=0;
- try{pb=+localStorage.getItem(key)||0;if(G.auto)t+=' · Autoplay';else if(!died&&!G.mp&&!G.practice&&G.sc>pb){localStorage.setItem(key,G.sc);t+=pb?' · New best!':''}}catch(e){}
+function fin(t){if(G.over)return;const wasLive=!!G.live;if(wasLive)liveCleanup();if(G.practice)t='Practice complete';if(wasLive)t='Live · '+t;G.over=1;try{G.s.stop()}catch(e){}if(MP&&MP.pz)MP.pz={me:0,them:0};G.paused=0;try{AC.resume()}catch(e){}if(MP)send({k:'end'});if(G.mp)t='Co-op · '+t;
+ const tot=notes.length,acc=tot?(G.p+.6*G.g)/tot:0,died=G.hp<=0,rk=died?'F':acc>=.95?'S':acc>=.85?'A':acc>=.7?'B':acc>=.5?'C':'D',key='dc:'+fname+sel+diff;let pb=0;
+ try{pb=+localStorage.getItem(key)||0;if(G.auto)t+=' · Autoplay';else if(!died&&!G.mp&&!G.practice&&!wasLive&&G.sc>pb){localStorage.setItem(key,G.sc);t+=pb?' · New best!':''}}catch(e){}
  $('et').textContent=t;$('rk').textContent=rk;
  $('st').innerHTML=[['Score',G.sc.toLocaleString()],['Best combo',G.best],['Perfect',G.p],['Good',G.g],['Missed',G.m],['Accuracy',Math.round(acc*100)+'%']].map(a=>`<div>${a[0]}<b>${a[1]}</b></div>`).join('');
- $('pz').classList.remove('on');const co=!!MP,gs=co&&MP.role==='guest';if(co)setMy('results');$('nwm').style.display=co&&!gs?'':'none';$('again').style.display=gs?'none':'';$('chg').style.display=co||G.practice?'none':'';$('nw').textContent=co?'Leave co-op':G.practice?'Back to menu':'New song';$('etm').textContent=co?(gs?'Waiting for the host to play again…':'Press Play again to restart with your teammate.'):(G.practice?'Nice! Go back to the menu, upload a song and play for real.':'');show('end')}
+ $('pz').classList.remove('on');const co=!!MP,gs=co&&MP.role==='guest';if(co)setMy('results');$('nwm').style.display=co&&!gs?'':'none';$('again').style.display=gs?'none':'';$('again').textContent=wasLive?'Listen again':'Play again';$('chg').style.display=co||G.practice||wasLive?'none':'';$('nw').textContent=co?'Leave co-op':G.practice||wasLive?'Back to menu':'New song';$('etm').textContent=wasLive?'Live mode is experimental. Allow screen audio again to start a new session.':co?(gs?'Waiting for the host to play again…':'Press Play again to restart with your teammate.'):(G.practice?'Nice! Go back to the menu, upload a song and play for real.':'');show('end')}
 function rs(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx=W/2;u=Math.min(W/13,H/8);tp=Math.max(76,u*.72+44);const bm=Math.max(20,u*.5),mx=Math.max(8,u*.15),Hf=H-tp-bm;S=Math.min((W-2*mx)/VW,Hf/VH);ox=(W-VW*S)/2;oy=tp+(Hf-VH*S)/2;CR=RV*S}
 addEventListener('resize',()=>G&&!G.over&&rs());
-function pause(on){if(!G||G.over)return;if(MP){const pz=MP.pz||(MP.pz={me:0,them:0}),v=on?1:0;if(pz.me===v)return;pz.me=v;send({k:'pz',p:v});chatSys(v?'You paused the game.':'You are ready.');pzUpdate();return}G.paused=on;$('pz').classList.toggle('on',on);on?AC.suspend():AC.resume()}
+function pause(on){if(!G||G.over)return;if(MP){const pz=MP.pz||(MP.pz={me:0,them:0}),v=on?1:0;if(pz.me===v)return;pz.me=v;send({k:'pz',p:v});chatSys(v?'You paused the game.':'You are ready.');pzUpdate();return}G.paused=on;$('pz').classList.toggle('on',on);$('livePause').style.display=G.live?'flex':'none';if(G.live)liveSyncLabels();const r=on?AC.suspend():AC.resume();if(G.live&&!on)Promise.resolve(r).then(()=>{LIVE.startAt=AC.currentTime-LIVE.samples/LIVE.sr;LIVE.clock.reset()}).catch(()=>{})}
 function pzUpdate(){const m=MP;if(!m||!G||G.over)return;const pz=m.pz||(m.pz={me:0,them:0}),any=pz.me||pz.them,rd=(pz.me?0:1)+(pz.them?0:1);
  if(any&&!G.paused){G.paused=1;AC.suspend()}else if(!any&&G.paused){G.paused=0;AC.resume()}
  $('pz').classList.toggle('on',!!any);$('pzc').style.display=any?'':'none';$('pzm').style.display=any?'':'none';
  if(any){$('pzc').textContent='READY '+rd+'/2';$('pzt').textContent=pz.me?'Paused':'Partner paused';$('pzm').textContent=pz.me?(pz.them?'You both paused. The game continues when you are both ready.':'Press Resume when you are ready. The game continues when everyone is ready (2/2).'):'Waiting for your partner to resume. The game continues when everyone is ready (2/2).';$('rz').style.display=pz.me?'':'none';chatPlace('pz')}else CHAT.vis=false;
  $('pzend').style.display=m.role==='host'?'':'none'}
 function pzReset(){$('pzc').style.display='none';$('pzm').style.display='none';$('pzend').style.display='none';$('rz').style.display='';$('pzt').textContent='Paused'}
-function quit(){if(G){G.over=1;try{G.s.stop()}catch(e){}}$('pz').classList.remove('on');AC.resume();const gs=MP&&MP.role==='guest';mpLeave();if(gs||PR){PR=false;show('up')}else{show('pick');refresh()}}
+function quit(){if(G&&G.live){G.over=1;liveCleanup();$('pz').classList.remove('on');AC.resume();show('up');return}if(G){G.over=1;try{G.s.stop()}catch(e){}}$('pz').classList.remove('on');AC.resume();const gs=MP&&MP.role==='guest';mpLeave();if(gs||PR){PR=false;show('up')}else{show('pick');refresh()}}
 $('rz').onclick=()=>pause(0);$('qt').onclick=quit;
 document.addEventListener('visibilitychange',()=>document.hidden&&G&&!G.over&&!MP&&pause(1));
 addEventListener('keydown',e=>{if(!G||G.over)return;const k=String(e.key||'').toLowerCase();
@@ -306,14 +328,20 @@ function circle(c,n,st){const x=PX(n.nx),y=PY(n.ny),r=R(n),col=n.big?'#ffc83d':C
   if(h){const f=c.createRadialGradient(x,y,0,x,y,r*1.6);f.addColorStop(0,col+'aa');f.addColorStop(1,col+'00');c.fillStyle=f;c.beginPath();c.arc(x,y,r*1.6,0,6.3);c.fill()}
   c.strokeStyle=h?'#fff':'#a58bbd';c.lineWidth=4;c.beginPath();c.arc(x,y,r*(h?1+q*.7:1-q*.3),0,6.3);c.stroke();
   if(h){c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc(x,y,r*(1+q*1.3),0,6.3);c.stroke()}c.globalAlpha=1;return}
- const T=n===tgt(),al=Math.min(1,(lead()-(n.t-st))/.35),ap=1+2*Math.max(0,(n.t-st)/lead()),pz=.5+.5*Math.sin(st*8);c.globalAlpha=al*(T?1:own(n)?.68:.3);
- const g=c.createRadialGradient(x-r*.3,y-r*.35,r*.1,x,y,r);g.addColorStop(0,col+'cc');g.addColorStop(.55,'#1d0a2b');g.addColorStop(1,col+'88');
- c.shadowColor=col;c.shadowBlur=T?36:8;c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.3);c.fill();c.strokeStyle=T?'#fff':col;c.lineWidth=T?(n.big?7:5):3;c.stroke();c.shadowBlur=0;
- c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc(x,y,r*.82,0,6.3);c.stroke();
+ const T=n===tgt(),al=Math.min(1,(lead()-(n.t-st))/.35);
+ // The next circle breathes and wears a rotating dashed crown. The solid
+ // closing ring is still the timing cue; hit radius stays stable.
+ const pz=REDUCED_MOTION?.5:.5+.5*Math.sin(st*7),body=T&&!REDUCED_MOTION?r*(1+.035*pz):r;
+ c.globalAlpha=al*(T?1:own(n)?.5:.26);
+ if(T){const halo=c.createRadialGradient(x,y,r*.7,x,y,r*1.9);halo.addColorStop(0,col+'44');halo.addColorStop(1,col+'00');c.globalAlpha=al*(.45+.35*pz);c.fillStyle=halo;c.beginPath();c.arc(x,y,r*1.9,0,6.3);c.fill();c.globalAlpha=al}
+ const g=c.createRadialGradient(x-body*.3,y-body*.35,body*.1,x,y,body);g.addColorStop(0,T?'#ffffff':col+'cc');g.addColorStop(.45,T?col:'#1d0a2b');g.addColorStop(1,col+'88');
+ c.shadowColor=col;c.shadowBlur=T?40:6;c.fillStyle=g;c.beginPath();c.arc(x,y,body,0,6.3);c.fill();c.strokeStyle=T?'#fff':col;c.lineWidth=T?(n.big?7:5):3;c.stroke();c.shadowBlur=0;
+ c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.arc(x,y,body*.82,0,6.3);c.stroke();
  c.font=`800 ${r*.85}px Outfit,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.lineWidth=5;c.strokeStyle='#14061f';c.strokeText(n.num,x,y+2);c.fillStyle='#fff';c.fillText(n.num,x,y+2);c.textBaseline='alphabetic';
- if(T){c.globalAlpha=al*(.3+.4*pz);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.arc(x,y,r*(1.14+.07*pz),0,6.3);c.stroke();c.globalAlpha=al}
- if(!T&&n===G.t2){c.globalAlpha=al*.55;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,r*1.1,0,6.3);c.stroke()}
- c.globalAlpha=Math.min(1,(lead()-(n.t-st))/.12)*(T?1:.85);c.strokeStyle=T?'#fff':col;c.lineWidth=T?4:3;c.shadowColor=T?'#fff':col;c.shadowBlur=T?12:0;c.beginPath();c.arc(x,y,r+CR*2.2*Math.max(0,(n.t-st)/lead()),0,6.3);c.stroke();c.shadowBlur=0;c.globalAlpha=1}
+ if(T){c.globalAlpha=al*(.65+.3*pz);c.strokeStyle='#fff';c.lineWidth=3;c.setLineDash([r*.32,r*.22]);c.lineDashOffset=REDUCED_MOTION?0:-st*r*.9;c.beginPath();c.arc(x,y,r*1.22,0,6.3);c.stroke();c.setLineDash([]);c.lineDashOffset=0;
+  c.globalAlpha=al;c.fillStyle='#fff';c.beginPath();c.moveTo(x,y-r*1.38);c.lineTo(x-r*.13,y-r*1.58);c.lineTo(x+r*.13,y-r*1.58);c.closePath();c.fill()}
+ if(!T&&n===G.t2){c.globalAlpha=al*.35;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,r*1.1,0,6.3);c.stroke()}
+ c.globalAlpha=Math.min(1,(lead()-(n.t-st))/.12)*(T?1:.62);c.strokeStyle=T?'#fff':col;c.lineWidth=T?4:3;c.shadowColor=T?'#fff':col;c.shadowBlur=T?12:0;c.beginPath();c.arc(x,y,r+CR*2.2*Math.max(0,(n.t-st)/lead()),0,6.3);c.stroke();c.shadowBlur=0;c.globalAlpha=1}
 
 function bar(c,x,y,w,h,v,col){c.fillStyle='#2a1038';c.beginPath();c.roundRect?c.roundRect(x,y,w,h,h/2):c.rect(x,y,w,h);c.fill();if(v>0){c.fillStyle=col;c.beginPath();c.roundRect?c.roundRect(x,y,Math.max(h,w*v),h,h/2):c.rect(x,y,w*v,h);c.fill()}}
 function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
@@ -344,7 +372,8 @@ function render(st){const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
  c.fillStyle='#a58bbd';c.font=`600 ${u*.28}px Outfit,sans-serif`;c.fillText(Math.round(acc*100)+'%',m,m+u*.9);
  const bw=Math.min(W*.3,u*4);bar(c,W-bw-m,m+4,bw,12,G.hp/100,G.hp<30?'#ff4d4d':'#2ee6d6');
  bar(c,W-bw-m,m+22,bw,6,fev?(G.fe-st)/8:G.fv,fev?'#ffc83d':'#b46bff');if(fev){c.textAlign='right';c.fillStyle='#ffc83d';c.font=`800 ${u*.3}px Outfit,sans-serif`;c.fillText('FEVER x2',W-m,m+48)}c.textAlign='left';
- bar(c,0,H-8,W,8,Math.max(0,Math.min(1,st/buf.duration)),'#ff2e93');
+ bar(c,0,H-8,W,8,G.live?1:Math.max(0,Math.min(1,st/buf.duration)),G.live?'#2ee6d6':'#ff2e93');
+ if(G.live){const locked=LIVE.clock.recent(AC.currentTime);c.textAlign='center';c.font=`800 ${Math.max(13,u*.3)}px Outfit,sans-serif`;c.fillStyle=locked?'#2ee6d6':'#ffc83d';c.fillText(locked?'LIVE · about '+Math.round(TEMPO)+' BPM':'LIVE · listening for the beat…',cx,tp-8)}
  if(G.combo>1){const k=1+.35*Math.exp(-(st-G.ct)*9);c.save();c.translate(m,H-24);c.scale(k,k);c.fillStyle='#ffc83d';c.shadowColor='#ffc83d';c.shadowBlur=14;c.font=`800 ${u*.9}px Outfit,sans-serif`;c.fillText(G.combo+'x',0,0);c.restore()}
  if(G.practice){const h=G.p+G.g,tx=st<0?'Get ready! Click or tap each circle when its ring touches it.':h<4?'Click the BRIGHT circle when the ring touches it. Follow the numbers.':h<10?'Nice! Keep your combo going. A miss breaks it.':h<18?'Big gold circles are accents worth double points.':h<28?'Fill the purple bar to trigger FEVER: x2 score!':'Almost done. Keep the rhythm!';c.textAlign='center';c.font=`800 ${Math.max(14,u*.34)}px Outfit,sans-serif`;c.lineWidth=5;c.strokeStyle='#14061f';c.fillStyle='#ffc83d';c.strokeText(tx,cx,tp+u*.2);c.fillText(tx,cx,tp+u*.2)}
  if(st<0){c.textAlign='center';c.fillStyle='#f3ead8';c.font=`400 ${u*2*(1+.3*((-st)%1))}px Monoton,Impact,sans-serif`;c.fillText(Math.ceil(-st),cx,H*.45);c.font=`600 ${u*.32}px Outfit,sans-serif`;c.fillStyle='#a58bbd';c.fillText('The bright circle is always next. Click it as its ring closes in',cx,H*.45+u)}}
@@ -366,6 +395,103 @@ function setApt(v){if(MP&&v)return;apt=v;if(!v)aplay=false;modeSync();modeNote(v
 function setAplay(v){if(!apt||MP)return;aplay=v;if(v&&G)G.auto=1;modeSync();modeNote(v?'AUTOPLAY ON':'AUTOPLAY OFF')}
 document.querySelectorAll('.modes').forEach(e=>{e.innerHTML='<button class="alt tg mt"></button><button class="alt tg mp"></button><small>Auto point glides your cursor to the next circle, so you only click. Turn it on to unlock Autoplay, which plays the whole song for you. Keys: W and E.</small>'});modeSync();
 document.addEventListener('click',e=>{const t=e.target;if(t.classList.contains('mt')){setApt(!apt);t.blur()}else if(t.classList.contains('mp')){setAplay(!aplay);t.blur()}});
+
+// ===== Experimental live mode: permission-granted audio only, no recording =====
+const LIVE={active:false,entered:false,stream:null,node:null,source:null,silent:null,worker:null,timer:0,workletReady:false,busy:false,seq:0,ring:[],samples:0,sr:0,startAt:0,offset:0,level:0,clock:OsuLiveBeats.createClock(),place:null};
+const liveStatus=t=>{$('liveStatus').textContent=t};
+function liveSyncLabels(){const v=Math.round(LIVE.offset*1000),txt=(v>0?'+':'')+v+' ms';$('liveLat').value=v;$('liveLatP').value=v;$('liveLo').textContent=txt;$('liveLoP').textContent=txt}
+function liveSupport(){const ok=typeof isSecureContext!=='undefined'&&isSecureContext&&navigator.mediaDevices&&typeof navigator.mediaDevices.getDisplayMedia==='function';$('liveStart').disabled=!ok;return ok}
+function liveCleanup(){
+ LIVE.seq++;LIVE.active=false;LIVE.entered=false;LIVE.busy=false;clearInterval(LIVE.timer);LIVE.timer=0;
+ if(LIVE.worker){try{LIVE.worker.terminate()}catch(e){}LIVE.worker=null}
+ if(LIVE.node){try{LIVE.node.port&&LIVE.node.port.postMessage('stop')}catch(e){}try{LIVE.node.disconnect()}catch(e){}LIVE.node=null}
+ if(LIVE.source){try{LIVE.source.disconnect()}catch(e){}LIVE.source=null}
+ if(LIVE.silent){try{LIVE.silent.disconnect()}catch(e){}LIVE.silent=null}
+ if(LIVE.stream){for(const t of LIVE.stream.getTracks())try{t.stop()}catch(e){}LIVE.stream=null}
+ LIVE.ring=[];LIVE.samples=0;LIVE.level=0;LIVE.clock.reset();LIVE.place=null;
+ $('liveStart').style.display='';$('liveStop').style.display='none';$('livePause').style.display='none';liveSupport();
+}
+function openLive(){stopPv();liveCleanup();show('live');liveSyncLabels();liveStatus(liveSupport()?'Ready. Allow screen audio, then play music in the shared tab/app.':'Live mode needs a secure (HTTPS) desktop browser with screen-audio capture, such as Chrome or Edge.')}
+function liveChunk(data){
+ if(!LIVE.active||!data||!data.channels||G&&G.live&&G.paused)return;
+ const samples=data.samples||data.channels[0].length,endTime=LIVE.startAt+(LIVE.samples+samples)/LIVE.sr;
+ LIVE.samples+=samples;LIVE.ring.push({channels:data.channels,samples,endTime});
+ let power=0;for(const ch of data.channels)for(let i=0;i<ch.length;i+=16)power=Math.max(power,ch[i]*ch[i]);LIVE.level=Math.sqrt(power);
+ while(LIVE.ring.length&&LIVE.ring[0].endTime<endTime-10)LIVE.ring.shift();
+}
+function liveWindow(seconds){
+ const need=Math.min(LIVE.samples,Math.round(LIVE.sr*seconds));if(need<LIVE.sr*2||!LIVE.ring.length)return null;
+ const parts=[];let total=0;for(let i=LIVE.ring.length-1;i>=0&&total<need;i--){parts.push(LIVE.ring[i]);total+=LIVE.ring[i].samples}
+ const count=LIVE.ring[LIVE.ring.length-1].channels.length,channels=Array.from({length:count},()=>new Float32Array(need));let write=need;
+ for(const part of parts){const take=Math.min(part.samples,write),src=part.samples-take;for(let c=0;c<count;c++)channels[c].set(part.channels[c].subarray(src,src+take),write-take);write-=take;if(!write)break}
+ return{channels,sampleRate:LIVE.sr,endTime:LIVE.ring[LIVE.ring.length-1].endTime,duration:need/LIVE.sr};
+}
+function liveAnalyze(win,id){
+ if(LIVE.worker){try{LIVE.worker.postMessage({type:'analyze',id,channels:win.channels,sampleRate:win.sampleRate,endTime:win.endTime},win.channels.map(ch=>ch.buffer));return}catch(e){try{LIVE.worker.terminate()}catch(_){}LIVE.worker=null;LIVE.busy=false;liveStatus('Switching to compatibility analysis on this browser.');return}}
+ OsuBeatDetection.extract(win.channels,win.sampleRate).then(r=>liveSnapshot({id,endTime:win.endTime,duration:win.duration,bpm:r?r.bpm:0,beats:r?r.beat:[]})).catch(()=>{LIVE.busy=false});
+}
+function liveTick(){
+ if(!LIVE.active||LIVE.busy||G&&G.live&&G.paused)return;
+ if(LIVE.samples/LIVE.sr<4){liveStatus('Listening… play music with a clear beat. Starting after a few seconds.');return}
+ const win=liveWindow(8);if(!win)return;LIVE.busy=true;liveAnalyze(win,LIVE.seq);
+}
+function liveSnapshot(s){
+ if(!LIVE.active||s.id!==LIVE.seq)return;LIVE.busy=false;
+ const state=LIVE.clock.update(s),now=AC.currentTime;TEMPO=Math.round((state.bpm||TEMPO||120)*10)/10;
+ if(G&&G.live&&!G.over)addLiveNotes(LIVE.clock.predict(now,lead()+.5,.9),now);
+ if(!LIVE.entered&&state.ready&&LIVE.clock.recent(now)&&LIVE.clock.predict(now,lead()+.5,.9).length>=2)enterLiveGame(now);
+ if(!state.ready)liveStatus('Listening… waiting for a clearer, steady beat.');
+ else if(!LIVE.clock.recent(now))liveStatus('Beat lost — is the music paused or too quiet? Waiting to lock on again.');
+ else liveStatus((LIVE.entered?'Playing live':'Beat found! Starting live')+' · about '+Math.round(state.bpm)+' BPM. You can stop sharing at any time.');
+}
+function livePlaceState(){let r=((Date.now()&0x7fffffff)^0x5eed)||7;LIVE.place={r,x:VW/2,y:VH/2,a:0,i:0};SEED=r}
+function placeLiveNote(n){
+ const ps=LIVE.place,rn=()=>{ps.r=(ps.r*1103515245+12345)&0x7fffffff;return(ps.r>>8)%1000/1000},m=RV*1.35,w=VW-2*m,h=VH-2*m;
+ const i=ps.i++,rr=RV*(n.big?1.2:1),prev=notes[notes.length-2],gp=prev?n.t-prev.t:9,dmax=Math.max(RV*2.4,Math.min(RV*5.1,800*gp));let best=null,bs=-1e9;
+ for(let k=0;k<120;k++){if(k>=80&&best)break;let px,py;if(k<40){const d=RV*2.3+rn()*(dmax-RV*2.3),an=ps.a+(rn()-.5)*(k<16?1.8:6.28);px=ps.x+Math.cos(an)*d;py=ps.y+Math.sin(an)*d}else{px=m+rn()*w;py=m+rn()*h;if(k<80&&Math.hypot(px-ps.x,py-ps.y)>dmax*1.3)continue}
+  if(px<m||px>VW-m||py<m||py>VH-m)continue;let md=1e9;for(let j=notes.length-2;j>=0&&n.t-notes[j].t<2.7;j--)md=Math.min(md,Math.hypot(px-notes[j].vx,py-notes[j].vy)-RV*(notes[j].big?1.2:1)-rr);
+  if(md>=RV*.4){best={px,py};break}if(md>bs){bs=md;best={px,py}}}
+ if(!best)best={px:VW/2,py:VH/2};n.vx=best.px;n.vy=best.py;n.nx=+(best.px/VW).toFixed(5);n.ny=+(best.py/VH).toFixed(5);ps.a=Math.atan2(best.py-ps.y,best.px-ps.x);ps.x=best.px;ps.y=best.py;
+}
+function addLiveNotes(predicted,now){
+ if(!G||!G.live||G.over)return;
+ for(const p of predicted){if(p.t<now+.25)continue;const gap=Math.max(.12,(LIVE.clock.state().period||.5)*.35);if(notes.some(n=>!n.done&&Math.abs(n.t-p.t)<gap))continue;
+  const n={t:p.t,s:p.s,big:p.s>.8,num:0,grp:0,done:0,live:true};let at=notes.findIndex(q=>q.t>n.t);if(at<0)at=notes.length;notes.splice(at,0,n);placeLiveNote(n);for(let i=at;i<notes.length;i++){notes[i].i=i;notes[i].num=i%4+1;notes[i].grp=Math.floor(i/4)}}
+ if(G.n>240){const drop=120;notes.splice(0,drop);G.n-=drop;G.bi-=drop;LIVE.place.i-=drop;for(let i=0;i<notes.length;i++)notes[i].i=i}
+}
+function enterLiveGame(now){
+ liveCleanupCaptureUI();LIVE.entered=true;PR=false;MP=null;fname='Live audio';sel='beat';diff=.45;notes=[];livePlaceState();
+ G={live:true,practice:0,mp:0,q:0,sg:-1,kos:[],pc:{},s:null,mg:null,T0:0,sc:0,combo:0,best:0,hp:100,p:0,g:0,m:0,fx:[],pa:[],tr:[],over:0,paused:0,fv:0,fe:-9,bn:[{t:'LIVE MODE',st:0,c:'#2ee6d6'}],ct:-9,bi:-1,n:0,mx:innerWidth/2,my:innerHeight/2,ms:0,off:LIVE.offset};
+ pzReset();$('pz').classList.remove('on');show('game');rs();modeVis();addLiveNotes(LIVE.clock.predict(now,lead()+.5,.9),now);
+}
+function liveCleanupCaptureUI(){$('liveStart').style.display='none';$('liveStop').style.display=''}
+async function startLiveCapture(){
+ if(LIVE.active)return;if(!liveSupport()){liveStatus('This browser cannot share screen audio here. Try desktop Chrome/Edge on HTTPS.');return}
+ $('liveStart').disabled=true;liveStatus('Waiting for the browser permission picker…');const request=LIVE.seq;let stream;
+ try{stream=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'browser'},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},preferCurrentTab:false,selfBrowserSurface:'exclude',systemAudio:'include'})}
+ catch(e){$('liveStart').disabled=false;liveStatus(e&&e.name==='NotAllowedError'?'Permission was cancelled or denied. Allow screen audio to use live mode; if this preview is embedded, open the game in a new tab.':'Could not start screen capture. Try Chrome/Edge and choose a tab or screen with audio.');return}
+ $('liveStart').disabled=false;
+ if(request!==LIVE.seq){for(const t of stream.getTracks())try{t.stop()}catch(e){}return}
+ if(!stream.getAudioTracks().length){for(const t of stream.getTracks())t.stop();liveStatus('No audio was shared. Pick the music tab and enable “Also share tab audio”, or share system audio.');return}
+ AC=AC||new(window.AudioContext||window.webkitAudioContext)();try{await AC.resume()}catch(e){}
+ if(request!==LIVE.seq){for(const t of stream.getTracks())try{t.stop()}catch(e){}return}
+ LIVE.stream=stream;LIVE.active=true;LIVE.entered=false;LIVE.sr=AC.sampleRate;LIVE.startAt=AC.currentTime;LIVE.samples=0;LIVE.ring=[];LIVE.clock.reset();LIVE.seq++;liveCleanupCaptureUI();
+ const ended=()=>{if(!LIVE.active)return;if(G&&G.live&&!G.over)fin('Screen sharing stopped');else{liveCleanup();liveStatus('Screen sharing stopped. Allow screen audio to listen again.')}};
+ for(const t of stream.getTracks())t.addEventListener('ended',ended);
+ try{
+  LIVE.source=AC.createMediaStreamSource(stream);LIVE.silent=AC.createGain();LIVE.silent.gain.value=0;LIVE.silent.connect(AC.destination);
+  if(AC.audioWorklet){if(!LIVE.workletReady){await AC.audioWorklet.addModule(new URL('live-audio-worklet.js',OsuBeatDetection.scriptURL).href);LIVE.workletReady=true}
+   if(!LIVE.active){liveCleanup();return}
+   LIVE.node=new AudioWorkletNode(AC,'osu-live-capture',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});LIVE.node.port.onmessage=e=>liveChunk(e.data);LIVE.source.connect(LIVE.node);LIVE.node.connect(LIVE.silent);
+  }else{const proc=AC.createScriptProcessor(2048,Math.min(2,stream.getAudioTracks()[0].getSettings().channelCount||2),1);proc.onaudioprocess=e=>{const b=e.inputBuffer,channels=Array.from({length:b.numberOfChannels},(_,c)=>b.getChannelData(c).slice());liveChunk({channels,samples:b.length})};LIVE.node=proc;LIVE.source.connect(proc);proc.connect(LIVE.silent)}
+  try{LIVE.worker=new Worker(new URL('live-beat-worker.js',OsuBeatDetection.scriptURL).href);LIVE.worker.onmessage=e=>{const d=e.data;if(d.type==='snapshot')liveSnapshot(d);else if(d.type==='error'){LIVE.busy=false;liveStatus('Live analysis hiccup — still listening.')}};LIVE.worker.onerror=()=>{try{LIVE.worker.terminate()}catch(e){}LIVE.worker=null;LIVE.busy=false;liveStatus('Using compatibility analysis on this browser.')}}catch(e){LIVE.worker=null}
+  LIVE.timer=setInterval(liveTick,750);liveTick();liveStatus('Listening… start the music in the shared tab/app. The game begins automatically once the beat locks.');
+ }catch(e){liveCleanup();liveStatus('Could not start live audio processing on this browser. Try desktop Chrome/Edge over HTTPS.')}
+}
+$('liveb').onclick=openLive;$('liveBack').onclick=()=>{liveCleanup();show('up')};$('liveStop').onclick=()=>{if(G&&G.live&&!G.over)fin('Live session stopped');else{liveCleanup();liveStatus('Stopped. Allow screen audio to listen again.')}};
+$('liveStart').onclick=startLiveCapture;
+$('liveLat').oninput=e=>{LIVE.offset=+e.target.value/1000;liveSyncLabels()};$('liveLatP').oninput=e=>{LIVE.offset=+e.target.value/1000;if(G&&G.live)G.off=LIVE.offset;liveSyncLabels()};
+addEventListener('pagehide',()=>liveCleanup());
 
 // ===== Co-op: direct peer-to-peer (WebRTC). No server, no accounts, no keys. =====
 const mps=t=>$('mps').textContent=t,ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
@@ -550,7 +676,7 @@ $('cuse').onclick=()=>{saveCloud();if(!customCloud()){$('ctr').textContent='Ente
  if(m.cs){m.cs.done=1;clearInterval(m.cs.w)}clearTimeout(m.songWait);m.noStorage=0;m.songSent=0;m.songStarted=0;m.slowWarned=0;m.upP=null;m.up=null;m.cpath=null;m.deleted=0;
  if(m.sess){$('ctr').textContent='Switching to storage…';hostSendSong(m)}else $('ctr').textContent='Saved. It will be used as soon as your friend joins.'};
 // ===== practice mode + animated tutorial =====
-function startPractice(){stopPv();AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();const sr=AC.sampleRate,dur=44,per=60/92,b=AC.createBuffer(1,Math.floor(sr*dur),sr),d=b.getChannelData(0);
+function startPractice(){stopPv();liveCleanup();AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();const sr=AC.sampleRate,dur=44,per=60/92,b=AC.createBuffer(1,Math.floor(sr*dur),sr),d=b.getChannelData(0);
  for(let k=0;k*per<dur-.5;k++){const s0=Math.floor(k*per*sr);for(let i=0;i<sr*.25&&s0+i<d.length;i++){const u2=i/sr;d[s0+i]+=.8*Math.sin(6.283*(55+80*Math.exp(-u2*35))*u2)*Math.exp(-u2*18)}
   const h0=Math.floor((k*per+per/2)*sr);let pv=0;for(let i=0;i<sr*.06&&h0+i<d.length;i++){const n=Math.random()*2-1;d[h0+i]+=.12*(n-pv)*Math.exp(-i/sr*90);pv=n}}
  buf=b;fname='Practice';TEMPO=92;SEED=4242;sel='beat';diff=.55;const bt=[];for(let k=0;k<60;k++){const t=2.6+k*per;if(t>dur-2)break;bt.push({t,s:k%4===0?.95:.5})}
@@ -619,7 +745,7 @@ $('pzend').onclick=()=>{if(MP&&MP.role==='host'&&G&&!G.over){send({k:'end',why:'
 $('nwm').onclick=()=>{if(!MP||MP.role!=='host')return;setMy('choosing');chatSys('You are choosing a new song…');$('f2').click()};
 $('f2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)analyze(f);else setMy('results')};$('f2').oncancel=()=>setMy('results');
 // ===== version, invite links =====
-const VERSION='3.3',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+const VERSION='3.4',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
 const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}

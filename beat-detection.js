@@ -8,6 +8,9 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = api;
   } else if (typeof window === 'undefined' && typeof importScripts === 'function') {
+    // Expose the API for companion workers (live mode) as well as installing
+    // the default one-shot message handler for ordinary file analysis.
+    self.OsuBeatDetection = api;
     self.onmessage = async function (event) {
       try {
         const { channels, sampleRate } = event.data;
