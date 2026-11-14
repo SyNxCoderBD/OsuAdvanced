@@ -133,6 +133,7 @@ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}.scr:not(#
  <div class="go"><button id="again">Play again</button><button id="chg" class="alt">Change beats</button><button id="nw" class="alt">New song</button><button id="nwm" class="alt" style="display:none">Change music</button></div><div id="cm_end"></div>
 </section>
 
+<script src="beat-detection.js"></script>
 <script>
 const $=i=>document.getElementById(i),cv=$('cv');
 const show=n=>{document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id===n));cv.style.display=n==='game'?'block':'none';$('as2').style.display=n==='game'&&!MP?'block':'none';$('pzb').style.display=n==='game'?'block':'none';$('ver').style.display=n==='game'?'none':'block';if(typeof chatPlace==='function')chatPlace(n)};
@@ -145,51 +146,47 @@ $('f').onchange=e=>e.target.files[0]&&analyze(e.target.files[0]);
 const dz=$('drop');dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};dz.ondragleave=()=>dz.classList.remove('drag');
 dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');e.dataTransfer.files[0]&&analyze(e.dataTransfer.files[0])};
 
-//DSP-START
-const BND={kick:[40,150],snare:[400,5000],hat:[6000,16000],all:[40,16000]},DN=2048,DH=512,DOFF=1250;
-function fft(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
- for(let L=2;L<=n;L<<=1){const a=-6.283185307179586/L,wr=Math.cos(a),wi=Math.sin(a),h=L>>1;for(let i=0;i<n;i+=L){let cr=1,ci=0;for(let k=0;k<h;k++){const x=i+k,y=x+h,tr=re[y]*cr-im[y]*ci,ti=re[y]*ci+im[y]*cr;re[y]=re[x]-tr;im[y]=im[x]-ti;re[x]+=tr;im[x]+=ti;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t}}}}
-const p98=o=>{const q=Float32Array.from(o).sort();return q[Math.floor(q.length*.98)]||0};
-function pick(o,sr,gap=.05){const n=o.length,p=p98(o);if(p<1e-6)return[];const v=new Float32Array(n);for(let i=0;i<n;i++)v[i]=o[i]/p;
- const pre=new Float64Array(n+1);for(let i=0;i<n;i++)pre[i+1]=pre[i]+v[i];const W=Math.round(.3*sr/DH),out=[];let last=-9;
- for(let i=2;i<n-2;i++){const a=Math.max(0,i-W),b=Math.min(n,i+W),m=(pre[b]-pre[a])/(b-a);
-  if(v[i]>m*1.5+.12&&v[i]>=v[i-1]&&v[i]>=v[i-2]&&v[i]>v[i+1]&&v[i]>v[i+2]){const A=v[i-1],C=v[i+1],dn=A-2*v[i]+C,fr=dn?Math.max(-.5,Math.min(.5,.5*(A-C)/dn)):0,t=((i+fr)*DH+DOFF)/sr,e={t,s:Math.min(1,v[i]/1.5)};
-   if(t-last>=gap){out.push(e);last=t}else if(e.s>out[out.length-1].s){out[out.length-1]=e;last=t}}}
- return out}
-function tempo(odf,sr){const n=odf[0].length,fps=sr/DH,pk=[0,1,3].map(i=>p98(odf[i])||1),c=new Float32Array(n);
- for(let i=0;i<n;i++)c[i]=odf[0][i]/pk[0]+odf[1][i]/pk[1]+odf[3][i]/pk[2];
- const s=new Float32Array(n);for(let i=1;i<n-1;i++)s[i]=.25*c[i-1]+.5*c[i]+.25*c[i+1];
- let best=-1,bb=120,bp=0;
- for(let g=70;g<=180;g+=.5){const P=60/g*fps,L=Math.ceil(P);let loc=-1,lp=0;
-  for(let ph=0;ph<L;ph++){let sum=0,cnt=0;for(let q=ph;q<n-1;q+=P){sum+=s[Math.round(q)];cnt++}const v=sum/cnt;if(v>loc){loc=v;lp=ph}}
-  const sc=loc*Math.exp(-Math.pow(Math.log2(g/115),2)/(2*.55*.55));if(sc>best){best=sc;bb=g;bp=lp}}
- const P=60/bb*fps,beats=[],pc=p98(s)||1,w=Math.max(1,Math.round(P*.15));let pos=bp;
- while(pos<n-3){const ci=Math.round(pos);let bi=ci,bv=-1;for(let j=Math.max(2,ci-w);j<=Math.min(n-3,ci+w);j++)if(s[j]>bv){bv=s[j];bi=j}
-  if(bv/pc>.06){beats.push({t:(bi*DH+DOFF)/sr,s:Math.min(1,bv/pc/1.2)});pos+=.4*(bi-pos)}pos+=P}
- return{bpm:bb,beats}}
-async function extract(data,sr,cb){
- const F=Math.floor((data.length-DN)/DH);if(F<100)return null;
- const win=new Float32Array(DN),re=new Float32Array(DN),im=new Float32Array(DN),K=DN/2,prev=new Float32Array(K),d=new Float32Array(K),ks=Object.keys(BND);
- for(let i=0;i<DN;i++)win[i]=.5-.5*Math.cos(6.283185307179586*i/DN);
- const rg=ks.map(k=>[Math.max(1,Math.round(BND[k][0]*DN/sr)),Math.min(K-1,Math.round(BND[k][1]*DN/sr))]),odf=ks.map(()=>new Float32Array(F));
- for(let f=0;f<F;f++){const o=f*DH;for(let i=0;i<DN;i++){re[i]=data[o+i]*win[i];im[i]=0}fft(re,im);
-  for(let k=1;k<K;k++){const m=Math.log1p(1000*Math.hypot(re[k],im[k])/DN);d[k]=m>prev[k]?m-prev[k]:0;prev[k]=m}
-  for(let b=0;b<ks.length;b++){let sm=0;for(let k=rg[b][0];k<=rg[b][1];k++)sm+=d[k];odf[b][f]=f?sm/Math.sqrt(rg[b][1]-rg[b][0]+1):0}
-  if(f%150==0){cb&&cb(f/F);await new Promise(r=>setTimeout(r,0))}}
- {const sn=odf[1],ht=odf[2],ps=p98(sn)||1,pt=p98(ht)||1;for(let i=0;i<F;i++)sn[i]=Math.max(0,sn[i]/ps-1.1*ht[i]/pt)*ps}
- const out={};ks.forEach((k,b)=>out[k]=pick(odf[b],sr));const t=tempo(odf,sr);out.beat=t.beats;out.bpm=t.bpm;return out}
-//DSP-END
+//Beat analysis lives in beat-detection.js so it can also run off the UI thread.
+let analysisController=null;
+function detectBeats(channels,sampleRate,onProgress,signal){
+ const fallback=()=>OsuBeatDetection.extract(channels,sampleRate,onProgress,signal);
+ if(typeof Worker!=='function'||location.protocol==='file:'||!OsuBeatDetection.scriptURL)return fallback();
+ return new Promise((resolve,reject)=>{
+  let worker,settled=false,falling=false;
+  const cleanup=()=>{if(worker)worker.terminate();if(signal)signal.removeEventListener('abort',onAbort)};
+  const finish=(value,error)=>{if(settled)return;settled=true;cleanup();error?reject(error):resolve(value)};
+  const useFallback=()=>{if(settled||falling)return;falling=true;if(worker)worker.terminate();fallback().then(v=>finish(v),e=>finish(null,e))};
+  const onAbort=()=>finish(null,new DOMException('Analysis cancelled','AbortError'));
+  try{worker=new Worker(OsuBeatDetection.scriptURL)}catch(e){resolve(fallback());return}
+  if(signal){if(signal.aborted){onAbort();return}signal.addEventListener('abort',onAbort,{once:true})}
+  worker.onmessage=e=>{const d=e.data;if(d.error){useFallback();return}if(typeof d.progress==='number'){if(!settled&&onProgress)onProgress(d.progress);return}if('result' in d)finish(d.result)};
+  worker.onerror=e=>{e.preventDefault();useFallback()};
+  worker.postMessage({channels,sampleRate});
+ });
+}
 async function analyze(file){
+ if(analysisController)analysisController.abort();
+ const controller=new AbortController();analysisController=controller;const job=controller.signal;
  PR=false;SONGFILE=file;fname=file.name.replace(/\.[^.]+$/,'');show('wait');AC=AC||new(window.AudioContext||window.webkitAudioContext)();$('err').textContent='';
- try{P(.03,'Decoding '+file.name+'…');buf=await AC.decodeAudioData(await file.arrayBuffer())}
- catch(e){show('up');$('err').textContent="Couldn't read that file. Try an MP3, WAV, OGG or M4A.";return}
- P(.08,'Mixing down to mono…');await tick();const ch=buf.numberOfChannels,len=buf.length,mono=new Float32Array(len);
- for(let c=0;c<ch;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)mono[i]+=d[i]/ch}
- WV=new Float32Array(1200);const sp=len/1200;let mx=1e-9;for(let i=0;i<1200;i++){let m=0;for(let j=Math.floor(i*sp);j<Math.floor((i+1)*sp);j+=8)m=Math.max(m,Math.abs(mono[j]));WV[i]=m;mx=Math.max(mx,m)}for(let i=0;i<1200;i++)WV[i]/=mx;
- let h=2166136261;for(let i=0;i<512;i++)h=Math.imul(h^Math.floor(mono[Math.floor(i*len/512)]*1e6),16777619);SEED=h&0x7fffffff;
- const r=await extract(mono,buf.sampleRate,p=>P(.12+.85*p,'Reading the spectrum… '+Math.round(p*100)+'%'));
- if(!r){show('up');$('err').textContent='That clip is too short to analyse.';return}
- TEMPO=r.bpm;delete r.bpm;bands=r;P(1,'Done');setTimeout(()=>{show('pick');pickUI()},350)}
+ let decoded;
+ try{P(.03,'Decoding '+file.name+'…');decoded=await AC.decodeAudioData(await file.arrayBuffer())}
+ catch(e){if(job.aborted)return;show('up');$('err').textContent="Couldn't read that file. Try an MP3, WAV, OGG or M4A.";return}
+ if(job.aborted)return;
+ try{
+  P(.08,'Preparing audio channels…');await tick();if(job.aborted)return;
+  const channels=Array.from({length:decoded.numberOfChannels},(_,c)=>decoded.getChannelData(c)),len=decoded.length;
+  const wave=new Float32Array(1200),sp=len/1200;let mx=1e-9;
+  for(let i=0;i<1200;i++){let m=0;for(let j=Math.floor(i*sp);j<Math.floor((i+1)*sp);j+=8)for(const d of channels)m=Math.max(m,Math.abs(d[j]));wave[i]=m;mx=Math.max(mx,m)}
+  for(let i=0;i<1200;i++)wave[i]/=mx;
+  let h=2166136261;for(let i=0;i<512;i++){const idx=Math.floor(i*len/512);let sample=0;for(const d of channels)if(Math.abs(d[idx])>Math.abs(sample))sample=d[idx];h=Math.imul(h^Math.floor(sample*1e6),16777619)}
+  const seed=h&0x7fffffff;
+  const r=await detectBeats(channels,decoded.sampleRate,p=>{if(!job.aborted)P(.12+.85*p,'Reading the spectrum… '+Math.round(p*100)+'%')},job);
+  if(job.aborted)return;
+  if(!r){show('up');$('err').textContent='That clip is too short to analyse.';return}
+  buf=decoded;WV=wave;SEED=seed;TEMPO=r.bpm;delete r.bpm;bands=r;P(1,'Done');setTimeout(()=>{if(!job.aborted){show('pick');pickUI()}},350);
+ }catch(e){if(job.aborted||e.name==='AbortError')return;show('up');$('err').textContent='Could not analyse that file. Try another MP3, WAV, OGG or M4A.'}
+ finally{if(analysisController===controller)analysisController=null}
+}
 
 function build(){
  let src=bands[sel];if(sel==='beat'&&60/TEMPO<diff){const k=Math.ceil(diff/(60/TEMPO));src=src.filter((_,i)=>i%k==0)}
@@ -622,7 +619,7 @@ $('pzend').onclick=()=>{if(MP&&MP.role==='host'&&G&&!G.over){send({k:'end',why:'
 $('nwm').onclick=()=>{if(!MP||MP.role!=='host')return;setMy('choosing');chatSys('You are choosing a new song…');$('f2').click()};
 $('f2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)analyze(f);else setMy('results')};$('f2').oncancel=()=>setMy('results');
 // ===== version, invite links =====
-const VERSION='3.2',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
+const VERSION='3.3',LOC=typeof location!=='undefined'?location:{hash:'',search:'',href:'',pathname:'',protocol:''};
 $('ver').textContent='OSU Advanced · v'+VERSION+' · Developed by Sayon';if($('verp'))$('verp').textContent='v'+VERSION+' · Developed by Sayon';
 const inviteLink=code=>(LOC.href||'').split('#')[0].split('?')[0]+'#join='+code;
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const i=document.createElement('textarea');i.value=t;i.style.cssText='position:fixed;opacity:0';document.body.appendChild(i);i.select();const ok=document.execCommand('copy');i.remove();return ok}catch(x){return false}}}

@@ -1,0 +1,12 @@
+{
+  "name": "osu-advanced",
+  "version": "3.3.0",
+  "private": true,
+  "description": "Browser rhythm game with stereo-aware beat detection.",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
